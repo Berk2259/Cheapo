@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminIcon, type AdminIconName } from "@/components/admin-icons";
 
-type Kind = "reports" | "compare";
+type Kind = "reports" | "compare" | "basket";
 
 const info: Record<Kind, { title: string; text: string; icon: AdminIconName }> = {
   reports: {
@@ -13,6 +13,11 @@ const info: Record<Kind, { title: string; text: string; icon: AdminIconName }> =
     title: "Satıcılar arası fiyat kıyaslama",
     text: "Aynı ürünü farklı satıcılarda yan yana gör, en ucuzunu hemen fark et.",
     icon: "scale",
+  },
+  basket: {
+    title: "Alışveriş listesi",
+    text: "Market ürünlerini işaretle, hangi marketin toplamda en ucuza geldiğini anında gör.",
+    icon: "cart",
   },
 };
 
@@ -52,6 +57,50 @@ function ReportsMock() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function BasketMock() {
+  const rows = [
+    ["Coca-Cola 1,5 L", "50,00", "46,50", "—", 1],
+    ["Dido Sütlü Çikolata", "27,50", "29,90", "—", 0],
+    ["Şampuan 500 ml", "89,90", "84,90", "92,00", 1],
+  ] as const;
+  return (
+    <div className="overflow-hidden rounded-[20px] border border-zinc-800 bg-zinc-900">
+      <table className="w-full text-left text-sm">
+        <thead className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
+          <tr>
+            <th className="px-3.5 py-2.5"></th>
+            <th className="px-3.5 py-2.5 font-bold">Ürün</th>
+            <th className="px-3.5 py-2.5 font-bold">Migros</th>
+            <th className="px-3.5 py-2.5 font-bold">CarrefourSA</th>
+            <th className="px-3.5 py-2.5 font-bold">Trendyol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r[0]} className="border-b border-zinc-800 last:border-0">
+              <td className="px-3.5 py-3">
+                <span className="block h-[16px] w-[16px] rounded-[5px] bg-emerald-500" />
+              </td>
+              <td className="px-3.5 py-3 font-bold">{r[0]}</td>
+              {[1, 2, 3].map((n) => (
+                <td
+                  key={n}
+                  className={
+                    "px-3.5 py-3 tabular-nums " +
+                    (r[4] === n - 1 ? "font-extrabold text-green-400" : "")
+                  }
+                >
+                  {r[n]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -133,7 +182,13 @@ export function PortalPremiumPreview({
             (premium ? "opacity-35" : "opacity-75 blur-[5px]")
           }
         >
-          {kind === "reports" ? <ReportsMock /> : <CompareMock />}
+          {kind === "reports" ? (
+            <ReportsMock />
+          ) : kind === "basket" ? (
+            <BasketMock />
+          ) : (
+            <CompareMock />
+          )}
         </div>
 
         <div

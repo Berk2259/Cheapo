@@ -132,6 +132,8 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
   önizlenir ve aşılırsa gönderilmeden uyarılır. Taleplerin durumu adım adım
   izlenir (Gönderildi, İnceleniyor, Takibe eklendi).
 - **Planım**: Ücretsiz ve Premium planın karşılaştırması.
+- **Alışveriş listesi** (yalnızca Premium): market ürünlerinden sepet oluşturma
+  ve satıcı bazında toplam kıyaslama.
 - **Haftalık rapor** ve **Ürün kıyası** (yalnızca Premium): Ücretsiz müşteri
   kilitli önizleme görür.
 
@@ -142,6 +144,14 @@ kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna*
 (`products.comparison_group`, örn. `coca-cola-1-5l`) koyar. Müşteri bir ürünü
 takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.
 "Destekle yaz" ve "Premium için yaz" düğmeleri şimdilik yalnızca görünümdür.
+
+Alışveriş listesi, müşterinin **kendi seçtiği** Market kategorisi ürünlerinden
+oluşur (`basket_items` tablosu, `customer_id` + `product_id`); "Ürün ekle"
+panelinden eklenmeyen hiçbir ürün listede görünmez. Eklenen ürün bir
+karşılaştırma grubuna bağlıysa, o gruptaki diğer satıcıların fiyatları da
+otomatik olarak aynı satırda gösterilir ve satıcı bazında toplam hesaplanıp en
+ucuz satıcı vurgulanır; tek satıcıdan takip edilen ürünler de eklenebilir,
+sadece kıyaslama çıkmaz.
 
 Portalın veritabanı erişimi satır bazlı güvenlik (RLS) kurallarıyla sağlanır:
 müşteri sadece kendi `customers`, `subscriptions`, `customer_requests`,
@@ -386,7 +396,7 @@ tarayıcı yöntemi orada da denenmelidir.
 - [x] Landing page: tanıtım, plan karşılaştırması ve talep formu (leads tablosuna kaydediyor)
 - [x] Panel: Talepler sayfası (leads listeleme, durum değiştirme, silme)
 - [x] Panel: talepten müşteri hesabı açma (Supabase Auth + customers kaydı)
-- [x] Tek giriş sayfası (/login), hesap türüne göre /admin veya /portal'a yönlendirme
+- [x] Tek giriş sayfası (/login), hesap türüne göre /admin veya /portal'a yönlendirme(koyu temalı, çapraz akan ürün kartlı arka plan tasarımıyla yenilendi)
 - [x] Müşteri portalı: giriş, takip edilen ürünler ve fiyatları görme
 - [x] Müşteri portalı: yeni talep gönderme (kategori + ürün seçimi) ve kendi taleplerini görme
 - [x] Panel: Müşteri talepleri sayfası, Tamamlandı'da otomatik takip ekleme
@@ -400,5 +410,6 @@ tarayıcı yöntemi orada da denenmelidir.
 - [x] Admin paneli yenilendi (3. aşama): Takipler ve Müşteriler sayfaları, panelden müşteri planı değiştirme
 - [x] Müşteri portalı yenilendi: koyu tema, yan menü, geniş ürün sayfası, bildirimler, gelişmiş talep formu, Planım
 - [x] Premium: Haftalık ve aylık rapor ile Satıcılar arası ürün kıyası (aynı ürünün market kayıtları admin panelinde "Karşılaştırma grubu" ile bağlanır)
+- [x] Premium: Alışveriş listesi (Market ürünlerinden sepet oluşturma, satıcı bazında toplam kıyaslama)
 - [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için (CarrefourSA); kaynağın yöntemine göre okuyucu seçimi
 - [x] Panel: ürünlere karşılaştırma grubu alanı

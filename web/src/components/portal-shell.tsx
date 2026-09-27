@@ -18,6 +18,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: "Takip",
     items: [
       { href: "/portal", label: "Ürünlerim", icon: "package" },
+      { href: "/portal/basket", label: "Alışveriş listesi", icon: "cart", premiumOnly: true, live: true },
       { href: "/portal/notifications", label: "Bildirimlerim", icon: "bell" },
       { href: "/portal/requests", label: "Talep gönder", icon: "plus" },
     ],
@@ -37,6 +38,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 
 const titles: Record<string, string> = {
   "/portal": "Ürünlerim",
+  "/portal/basket": "Alışveriş listesi",
   "/portal/requests": "Talep gönder",
   "/portal/notifications": "Bildirimlerim",
   "/portal/plan": "Planım",

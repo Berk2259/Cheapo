@@ -1,0 +1,342 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import { AdminIcon } from "@/components/admin-icons";
+import { addBasketItem, removeBasketItem } from "@/app/portal/basket/actions";
+
+export type BasketRow = { source: string; price: number | null; currency: string };
+export type BasketGroup = { key: string; name: string; rows: BasketRow[] };
+export type BasketCandidate = {
+    id: number;
+    name: string;
+    source: string;
+    price: number | null;
+    currency: string;
+    rows: { source: string; price: number | null; currency: string }[];
+};
+
+function money(value: number, currency: string) {
+    return `${value.toLocaleString("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })} ${currency}`;
+}
+
+export function PortalBasket({
+    groups,
+    candidates,
+}: {
+    groups: BasketGroup[];
+    candidates: BasketCandidate[];
+}) {
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const [message, setMessage] = useState<string | null>(null);
+    const [pendingId, setPendingId] = useState<number | null>(null);
+    const [, startTransition] = useTransition();
+
+    const stores = useMemo(() => {
+        const set = new Set<string>();
+        groups.forEach((g) => g.rows.forEach((r) => r.source && set.add(r.source)));
+        return [...set].sort();
+    }, [groups]);
+
+    const currency =
+        groups.flatMap((g) => g.rows).find((r) => r.price !== null)?.currency ?? "TRY";
+
+    function priceFor(g: BasketGroup, store: string): number | null {
+        const row = g.rows.find((r) => r.source === store);
+        return row && row.price !== null ? row.price : null;
+    }
+
+    const storeStats = stores.map((store) => {
+        let total = 0;
+        let count = 0;
+        groups.forEach((g) => {
+            const p = priceFor(g, store);
+            if (p !== null) {
+                total += p;
+                count += 1;
+            }
+        });
+        return { store, total, count, full: count > 0 && count === groups.length };
+    });
+
+    const fullStats = [...storeStats].filter((s) => s.full).sort((a, b) => a.total - b.total);
+    const winner = fullStats[0] ?? null;
+    const runnerUp = fullStats[1] ?? null;
+    const savings = winner && runnerUp ? runnerUp.total - winner.total : 0;
+
+    const filteredCandidates = candidates.filter((c) =>
+        c.name.toLocaleLowerCase("tr").includes(search.toLocaleLowerCase("tr")),
+    );
+
+    function handleAdd(id: number) {
+        setMessage(null);
+        setPendingId(id);
+        startTransition(async () => {
+            const result = await addBasketItem(id);
+            if (!result.ok) setMessage(result.message ?? "Eklenemedi.");
+            setPendingId(null);
+        });
+    }
+
+    function handleRemove(id: number) {
+        setMessage(null);
+        setPendingId(id);
+        startTransition(async () => {
+            const result = await removeBasketItem(id);
+            if (!result.ok) setMessage(result.message ?? "Kaldırılamadı.");
+            setPendingId(null);
+        });
+    }
+
+    return (
+        <div>
+            <div className="ad-in flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h1 className="text-[26px] font-bold tracking-[-0.02em]">Alışveriş listesi</h1>
+                    <p className="mt-0.5 text-zinc-500">
+                        İstediğin ürünleri listene ekle; birden fazla markette varsa fiyatları yan yana görürsün.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setDrawerOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-[#052e2b] transition hover:bg-emerald-400"
+                >
+                    <AdminIcon name="plus" size={16} stroke={2.6} />
+                    Ürün ekle
+                </button>
+            </div>
+
+            {message && (
+                <p className="ad-in mt-3 rounded-xl bg-red-400/15 px-4 py-2.5 text-sm font-bold text-red-400">
+                    {message}
+                </p>
+            )}
+
+            {groups.length === 0 ? (
+                <div className="mt-5 rounded-[20px] border-2 border-dashed border-zinc-800 px-5 py-12 text-center text-zinc-500">
+                    <b className="mb-1 block text-zinc-50">Listende henüz ürün yok</b>
+                    Sağ üstteki &quot;Ürün ekle&quot; ile takip ettiğin market ürünlerinden seçebilirsin.
+                </div>
+            ) : (
+                <>
+                    <div className="ad-in mt-4 overflow-hidden rounded-[20px] border border-zinc-800 bg-zinc-900">
+                        <div className="flex items-center gap-3 border-b border-zinc-800 px-[18px] py-4">
+                            <b className="text-base">Sepetim</b>
+                            <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-extrabold text-emerald-300">
+                                {groups.length} ürün
+                            </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="text-xs uppercase tracking-wider text-zinc-500">
+                                    <tr>
+                                        <th className="px-[18px] py-3 font-bold">Ürün</th>
+                                        {stores.map((store) => (
+                                            <th key={store} className="px-3 py-3 font-bold">
+                                                {store}
+                                            </th>
+                                        ))}
+                                        <th className="w-12 px-3 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {groups.map((g) => {
+                                        const priced = g.rows
+                                            .map((r) => r.price)
+                                            .filter((p): p is number => p !== null);
+                                        const cheapest = priced.length ? Math.min(...priced) : null;
+                                        const id = Number(g.key);
+                                        return (
+                                            <tr key={g.key} className="border-t border-zinc-800">
+                                                <td className="px-[18px] py-3 font-extrabold">{g.name}</td>
+                                                {stores.map((store) => {
+                                                    const p = priceFor(g, store);
+                                                    const isCheapest = p !== null && p === cheapest;
+                                                    return (
+                                                        <td
+                                                            key={store}
+                                                            className={
+                                                                "px-3 py-3 tabular-nums font-bold " +
+                                                                (isCheapest
+                                                                    ? "text-emerald-300"
+                                                                    : p === null
+                                                                        ? "text-zinc-600"
+                                                                        : "")
+                                                            }
+                                                        >
+                                                            {p !== null ? money(p, currency) : "—"}
+                                                        </td>
+                                                    );
+                                                })}
+                                                <td className="px-3 py-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemove(id)}
+                                                        disabled={pendingId === id}
+                                                        aria-label={`${g.name} kaldır`}
+                                                        className="grid h-[26px] w-[26px] place-items-center rounded-lg border border-zinc-800 text-zinc-500 transition hover:border-red-400 hover:text-red-400 disabled:opacity-40"
+                                                    >
+                                                        <AdminIcon name="x" size={13} stroke={2.6} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="border-t-2 border-zinc-800">
+                                        <td className="px-[18px] py-4 font-extrabold">
+                                            Toplam ({groups.length} ürün)
+                                        </td>
+                                        {storeStats.map((s) => (
+                                            <td
+                                                key={s.store}
+                                                className={
+                                                    "px-3 py-4 text-[15px] font-extrabold tabular-nums " +
+                                                    (winner && s.store === winner.store ? "text-emerald-300" : "")
+                                                }
+                                            >
+                                                {s.count > 0 ? money(s.total, currency) : "—"}
+                                            </td>
+                                        ))}
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+                        {storeStats.map((s) => {
+                            const isWinner = winner !== null && s.store === winner.store;
+                            const missing = groups.length - s.count;
+                            return (
+                                <div
+                                    key={s.store}
+                                    className={
+                                        "relative rounded-[20px] border bg-zinc-900 p-[18px] " +
+                                        (isWinner
+                                            ? "border-emerald-500 shadow-[0_18px_38px_-20px_rgba(16,185,129,0.55)]"
+                                            : "border-zinc-800")
+                                    }
+                                >
+                                    {isWinner && (
+                                        <span className="absolute -top-2.5 left-4 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10.5px] font-extrabold text-[#052e2b]">
+                                            🏆 En ucuz
+                                        </span>
+                                    )}
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="grid h-[34px] w-[34px] place-items-center rounded-[10px] bg-emerald-500/15 font-extrabold text-emerald-300">
+                                            {s.store[0]}
+                                        </span>
+                                        <div>
+                                            <b className="block text-[14.5px]">{s.store}</b>
+                                            <span className="text-xs text-zinc-500">
+                                                {s.count}/{groups.length} ürün mevcut
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 text-[22px] font-extrabold tracking-[-0.02em]">
+                                        {s.count > 0 ? money(s.total, currency) : "—"}
+                                    </div>
+                                    {isWinner && runnerUp && savings > 0.001 && (
+                                        <div className="mt-1 text-xs font-extrabold text-emerald-400">
+                                            {runnerUp.store}&apos;a göre {money(savings, currency)} ucuz
+                                        </div>
+                                    )}
+                                    {!s.full && missing > 0 && (
+                                        <div className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-amber-300">
+                                            <AdminIcon name="alert" size={13} />
+                                            {missing} ürün bu markette yok
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <p className="mt-4 text-[12.5px] text-zinc-500">
+                        Sadece listene eklediğin ürünler burada görünür. Tek markette olan ürünler de
+                        eklenebilir; kıyaslama sadece birden fazla markette bulunanlar için otomatik çıkar.
+                    </p>
+                </>
+            )}
+
+            {drawerOpen && (
+                <>
+                    <div
+                        className="fixed inset-0 z-40 bg-black/50"
+                        onClick={() => setDrawerOpen(false)}
+                    />
+                    <div className="fixed inset-y-0 right-0 z-41 flex w-full max-w-[420px] flex-col border-l border-zinc-800 bg-[#0c1817]">
+                        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+                            <h3 className="text-base font-extrabold">Ürün ekle</h3>
+                            <button
+                                type="button"
+                                onClick={() => setDrawerOpen(false)}
+                                className="grid h-[30px] w-[30px] place-items-center rounded-[9px] border border-zinc-800 text-zinc-400"
+                            >
+                                <AdminIcon name="x" size={14} />
+                            </button>
+                        </div>
+                        <div className="border-b border-zinc-800 px-5 py-3.5">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Takip ettiğin market ürünlerinde ara..."
+                                className="w-full rounded-[10px] border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-emerald-500"
+                            />
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3">
+                            {filteredCandidates.length === 0 ? (
+                                <p className="px-3 py-6 text-center text-sm text-zinc-500">
+                                    Eklenebilecek ürün bulunamadı.
+                                </p>
+                            ) : (
+                                filteredCandidates.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className="flex items-start gap-3 rounded-xl px-2 py-3 transition hover:bg-white/[0.03]"
+                                    >
+                                        <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-emerald-500/10 text-emerald-300">
+                                            <AdminIcon name="store" size={17} />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <b className="block truncate text-[13.5px] font-extrabold">{c.name}</b>
+                                            <span className="mt-1 flex flex-col gap-0.5">
+                                                {c.rows.map((r) => (
+                                                    <span
+                                                        key={r.source}
+                                                        className="flex items-center justify-between gap-3 text-[11.5px] text-zinc-500"
+                                                    >
+                                                        <span>{r.source}</span>
+                                                        <span className="font-bold text-zinc-400">
+                                                            {r.price !== null ? money(r.price, r.currency) : "—"}
+                                                        </span>
+                                                    </span>
+                                                ))}
+                                            </span>
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAdd(c.id)}
+                                            disabled={pendingId === c.id}
+                                            className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[9px] bg-emerald-500 font-black text-[#052e2b] disabled:opacity-50"
+                                        >
+                                            <AdminIcon name="plus" size={15} stroke={2.8} />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
