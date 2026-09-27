@@ -2325,47 +2325,217 @@ textarea.lf-input {
   animation: ad-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: calc(var(--i, 0) * 0.06s);
 }
+
 @keyframes ad-in {
   from {
     opacity: 0;
     transform: translateY(14px);
   }
 }
+
 .ad-grow {
   transform-origin: left;
   animation: ad-grow 1s cubic-bezier(0.3, 0.8, 0.3, 1) both;
 }
+
 @keyframes ad-grow {
   from {
     transform: scaleX(0);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
+
   .ad-in,
   .ad-grow {
     animation: none;
   }
 }
+
 /* Admin düzenleme çekmecesi */
 .ad-slide {
   animation: ad-slide 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
+
 @keyframes ad-slide {
   from {
     transform: translateX(100%);
   }
 }
+
 .ad-fade {
   animation: ad-fade 0.25s both;
 }
+
 @keyframes ad-fade {
   from {
     opacity: 0;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
+
   .ad-slide,
   .ad-fade {
     animation: none;
+  }
+}
+
+/* ---------- lg- : giriş ekranı arka planı (çapraz kayan kartlar) ---------- */
+.lg-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2300px;
+  height: 1500px;
+  transform: translate(-50%, -50%) rotate(-13deg);
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.lg-lane {
+  display: flex;
+  gap: 34px;
+  width: max-content;
+}
+
+.lg-lane.lg-l1,
+.lg-lane.lg-l3 {
+  animation: lg-mv 110s linear infinite;
+}
+
+.lg-lane.lg-l2,
+.lg-lane.lg-l4 {
+  animation: lg-mv2 110s linear infinite;
+}
+
+@keyframes lg-mv {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes lg-mv2 {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.lg-card {
+  flex: none;
+  width: 216px;
+  background: rgba(16, 30, 28, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.lg-card .lg-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lg-card b {
+  color: #e7f4f1;
+  font-size: 12.5px;
+  line-height: 1.3;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-card .lg-cat {
+  font-size: 10px;
+  font-weight: 800;
+  color: #5eead4;
+  background: rgba(45, 212, 191, 0.14);
+  border-radius: 7px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.lg-card .lg-pr {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+}
+
+.lg-card .lg-chg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 99px;
+  padding: 2px 7px;
+  margin-top: 6px;
+}
+
+.lg-card .lg-chg.dn {
+  background: rgba(74, 222, 128, 0.14);
+  color: #4ade80;
+}
+
+.lg-card .lg-chg.up {
+  background: rgba(248, 113, 113, 0.14);
+  color: #f87171;
+}
+
+.lg-card .lg-chg.eq {
+  background: rgba(255, 255, 255, 0.06);
+  color: #7d9d98;
+}
+
+.lg-card .lg-row2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(45, 212, 191, 0.12);
+  color: #7d9d98;
+  font-size: 10.5px;
+}
+
+.lg-card .lg-av {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0f766e;
+  color: #5eead4;
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  font-weight: 800;
+  flex: none;
+}
+
+.lg-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse 58% 52% at 50% 50%,
+      rgba(7, 13, 12, 0.2),
+      rgba(7, 13, 12, 0.86) 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-lane {
+    animation: none !important;
   }
 }
