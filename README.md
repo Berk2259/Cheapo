@@ -99,6 +99,16 @@ müşteri portalına (`/portal`), yoksa admin panele (`/admin`) yönlendirir.
 Her istekte bu kontrol tekrar yapılır, yani bir müşteri adres çubuğuna elle
 `/admin` yazsa da otomatik olarak `/portal`'a geri gönderilir (ve tersi).
 
+Giriş sayfası koyu temalı, ortada bölünmüş kartlı bir tasarıma sahiptir
+(`components/login-showcase.tsx`, `components/login-showcase-data.ts`).
+Arka planda örnek ürün/fiyat kartları çapraz şeritler halinde sürekli akar
+(saf CSS animasyonu, `globals.css` içindeki `lg-` ön ekli kurallar); bu
+kartlardaki ürün/fiyat bilgileri sayfa herkese açık olduğu için tamamen
+kurgusal örnek verilerdir, gerçek müşteri verisi değildir. Sağdaki form
+e-posta/şifre alanları, şifre göster-gizle, "Beni hatırla" (şu an yalnızca
+görsel, kalıcı bir davranışı yok) ve "Şifremi unuttum" (henüz pasif, ileride
+eklenecek) içerir.
+
 ### Talep ve hesap açma akışı
 
 Ziyaretçi landing page'deki formu doldurup talep gönderir (`leads` tablosu).
