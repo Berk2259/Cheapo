@@ -78,3 +78,60 @@ export async function removeBasketItem(productId: number): Promise<Result> {
   revalidatePath("/portal/basket");
   return { ok: true };
 }
+
+export async function createMatch(
+  productIds: number[],
+  name: string,
+): Promise<Result> {
+  if (productIds.length < 2) {
+    return { ok: false, message: "En az iki ürün seçmelisin." };
+  }
+  const trimmedName = name.trim();
+  if (!trimmedName) {
+    return { ok: false, message: "Grup için bir isim yaz." };
+  }
+
+  const supabase = await createClient();
+  const customerId = await currentCustomerId(supabase);
+  if (!customerId) return { ok: false, message: "Müşteri kaydı bulunamadı." };
+
+  const { data: match, error: matchError } = await supabase
+    .from("basket_matches")
+    .insert({ customer_id: customerId, name: trimmedName })
+    .select("id")
+    .single();
+
+  if (matchError || !match) {
+    return { ok: false, message: "Eşleştirme oluşturulamadı." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("basket_items")
+    .update({ match_id: match.id })
+    .eq("customer_id", customerId)
+    .in("product_id", productIds);
+
+  if (updateError) {
+    return { ok: false, message: "Ürünler eşleştirmeye bağlanamadı." };
+  }
+
+  revalidatePath("/portal/basket");
+  return { ok: true };
+}
+
+export async function removeMatch(matchId: number): Promise<Result> {
+  const supabase = await createClient();
+  const customerId = await currentCustomerId(supabase);
+  if (!customerId) return { ok: false, message: "Müşteri kaydı bulunamadı." };
+
+  const { error } = await supabase
+    .from("basket_matches")
+    .delete()
+    .eq("id", matchId)
+    .eq("customer_id", customerId);
+
+  if (error) return { ok: false, message: "Eşleştirme kaldırılamadı." };
+
+  revalidatePath("/portal/basket");
+  return { ok: true };
+}

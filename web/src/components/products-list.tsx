@@ -10,9 +10,10 @@ import {
 } from "@/components/product-drawer";
 
 type Filter = "all" | "error" | "waiting" | "off";
+type View = "list" | "group";
 
 function isError(status: string | null) {
-  return !!status && status !== "ok";
+  return !!status && !status.startsWith("ok");
 }
 
 const filters: { value: Filter; label: string }[] = [
@@ -40,6 +41,7 @@ export function ProductsList({
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [view, setView] = useState<View>("list");
   const [editing, setEditing] = useState<ProductData | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -59,10 +61,32 @@ export function ProductsList({
       .includes(q);
   });
 
+  // Görünüm "grup" ise ürünleri karşılaştırma grubuna göre kümeler;
+  // grubu olmayanlar "Gruplanmamış" başlığı altında tek tek listelenir.
+  const groups: { key: string; label: string; items: ProductData[] }[] = [];
+  const solo: ProductData[] = [];
+  if (view === "group") {
+    const map = new Map<string, ProductData[]>();
+    for (const p of visible) {
+      const key = p.comparison_group ?? "";
+      const list = map.get(key) ?? [];
+      list.push(p);
+      map.set(key, list);
+    }
+    for (const [key, items] of map) {
+      if (key) groups.push({ key, label: key, items });
+      else solo.push(...items);
+    }
+    groups.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+    solo.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  }
+
   function closeDrawer() {
     setEditing(null);
     setAdding(false);
   }
+
+  const rowProps = { categories, sources, onEdit: setEditing };
 
   return (
     <div className="mt-6">
@@ -113,6 +137,31 @@ export function ProductsList({
           })}
         </div>
 
+        <div className="inline-flex rounded-xl border border-zinc-800 bg-zinc-900 p-[3px]">
+          {(
+            [
+              ["list", "list", "Liste görünümü"],
+              ["group", "scale", "Karşılaştırma grubuna göre"],
+            ] as const
+          ).map(([value, icon, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setView(value)}
+              title={label}
+              aria-label={label}
+              className={
+                "grid place-items-center rounded-[9px] px-2.5 py-1.5 transition " +
+                (view === value
+                  ? "bg-emerald-500 text-[#052e2b]"
+                  : "text-zinc-500 hover:text-zinc-50")
+              }
+            >
+              <AdminIcon name={icon} size={17} />
+            </button>
+          ))}
+        </div>
+
         {canAdd ? (
           <button
             type="button"
@@ -128,39 +177,112 @@ export function ProductsList({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
-            <tr>
-              <th className="px-4 py-3 font-bold">Ürün</th>
-              <th className="px-4 py-3 font-bold">Fiyat</th>
-              <th className="px-4 py-3 font-bold">Son kontrol</th>
-              <th className="px-4 py-3 font-bold">Durum</th>
-              <th className="px-4 py-3 text-right font-bold">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800">
-            {visible.map((product) => (
-              <ProductRow
-                key={product.id}
-                product={product}
-                categories={categories}
-                sources={sources}
-                onEdit={setEditing}
-              />
-            ))}
-            {visible.length === 0 && (
+      {view === "list" ? (
+        <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
-                  {products.length === 0
-                    ? "Henüz ürün yok."
-                    : "Aramana uyan ürün bulunamadı."}
-                </td>
+                <th className="px-4 py-3 font-bold">Ürün</th>
+                <th className="px-4 py-3 font-bold">Fiyat</th>
+                <th className="px-4 py-3 font-bold">Son kontrol</th>
+                <th className="px-4 py-3 font-bold">Durum</th>
+                <th className="px-4 py-3 font-bold">Yöntem</th>
+                <th className="px-4 py-3 text-right font-bold">İşlemler</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {visible.map((product) => (
+                <ProductRow key={product.id} product={product} {...rowProps} />
+              ))}
+              {visible.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                    {products.length === 0
+                      ? "Henüz ürün yok."
+                      : "Aramana uyan ürün bulunamadı."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {groups.map((g) => (
+            <div
+              key={g.key}
+              className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900"
+            >
+              <div className="flex items-center gap-2.5 border-b border-zinc-800 bg-emerald-500/[0.06] px-4 py-3">
+                <span className="text-emerald-300">
+                  <AdminIcon name="scale" size={15} />
+                </span>
+                <b className="text-[14px] font-extrabold text-emerald-300">{g.label}</b>
+                <span className="rounded-full bg-emerald-500/15 px-2 py-px text-[11px] font-bold text-emerald-300">
+                  {g.items.length} kaynak
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">Ürün</th>
+                      <th className="px-4 py-3 font-bold">Fiyat</th>
+                      <th className="px-4 py-3 font-bold">Son kontrol</th>
+                      <th className="px-4 py-3 font-bold">Durum</th>
+                      <th className="px-4 py-3 font-bold">Yöntem</th>
+                      <th className="px-4 py-3 text-right font-bold">İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {g.items.map((product) => (
+                      <ProductRow key={product.id} product={product} {...rowProps} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+
+          {solo.length > 0 && (
+            <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+              <div className="flex items-center gap-2.5 border-b border-zinc-800 bg-zinc-800/40 px-4 py-3">
+                <b className="text-[14px] font-extrabold text-zinc-400">Gruplanmamış</b>
+                <span className="rounded-full bg-zinc-700/60 px-2 py-px text-[11px] font-bold text-zinc-300">
+                  {solo.length}
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">Ürün</th>
+                      <th className="px-4 py-3 font-bold">Fiyat</th>
+                      <th className="px-4 py-3 font-bold">Son kontrol</th>
+                      <th className="px-4 py-3 font-bold">Durum</th>
+                      <th className="px-4 py-3 font-bold">Yöntem</th>
+                      <th className="px-4 py-3 text-right font-bold">İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {solo.map((product) => (
+                      <ProductRow key={product.id} product={product} {...rowProps} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {groups.length === 0 && solo.length === 0 && (
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-8 text-center text-zinc-500">
+              {products.length === 0
+                ? "Henüz ürün yok."
+                : "Aramana uyan ürün bulunamadı."}
+            </div>
+          )}
+        </div>
+      )}
 
       {(editing || adding) && (
         <ProductDrawer

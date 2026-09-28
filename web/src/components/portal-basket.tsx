@@ -2,10 +2,21 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { AdminIcon } from "@/components/admin-icons";
-import { addBasketItem, removeBasketItem } from "@/app/portal/basket/actions";
+import {
+    addBasketItem,
+    createMatch,
+    removeBasketItem,
+    removeMatch,
+} from "@/app/portal/basket/actions";
 
-export type BasketRow = { source: string; price: number | null; currency: string };
-export type BasketGroup = { key: string; name: string; rows: BasketRow[] };
+export type BasketRow = { source: string; price: number | null; currency: string; name: string };
+export type BasketGroup = {
+    key: string;
+    name: string;
+    manual: boolean;
+    matchId: number | null;
+    rows: BasketRow[];
+};
 export type BasketCandidate = {
     id: number;
     name: string;
@@ -33,6 +44,10 @@ export function PortalBasket({
     const [search, setSearch] = useState("");
     const [message, setMessage] = useState<string | null>(null);
     const [pendingId, setPendingId] = useState<number | null>(null);
+    const [selecting, setSelecting] = useState(false);
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [matchModalOpen, setMatchModalOpen] = useState(false);
+    const [matchName, setMatchName] = useState("");
     const [, startTransition] = useTransition();
 
     const stores = useMemo(() => {
@@ -91,6 +106,51 @@ export function PortalBasket({
         });
     }
 
+    function handleUnlink(matchId: number) {
+        setMessage(null);
+        startTransition(async () => {
+            const result = await removeMatch(matchId);
+            if (!result.ok) setMessage(result.message ?? "Eşleştirme kaldırılamadı.");
+        });
+    }
+
+    function toggleSelecting() {
+        setSelecting((v) => !v);
+        setSelected(new Set());
+    }
+
+    function toggleSelect(key: string) {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    }
+
+    function confirmMatch() {
+        const trimmed = matchName.trim();
+        if (!trimmed) {
+            setMessage("Grup için bir isim yaz.");
+            return;
+        }
+        const ids = [...selected].map(Number);
+        setMessage(null);
+        startTransition(async () => {
+            const result = await createMatch(ids, trimmed);
+            if (!result.ok) {
+                setMessage(result.message ?? "Eşleştirilemedi.");
+                return;
+            }
+            setMatchModalOpen(false);
+            setMatchName("");
+            setSelecting(false);
+            setSelected(new Set());
+        });
+    }
+
+    const selectedGroups = groups.filter((g) => selected.has(g.key));
+
     return (
         <div>
             <div className="ad-in flex flex-wrap items-end justify-between gap-3">
@@ -100,14 +160,29 @@ export function PortalBasket({
                         İstediğin ürünleri listene ekle; birden fazla markette varsa fiyatları yan yana görürsün.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    onClick={() => setDrawerOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-[#052e2b] transition hover:bg-emerald-400"
-                >
-                    <AdminIcon name="plus" size={16} stroke={2.6} />
-                    Ürün ekle
-                </button>
+                <div className="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={toggleSelecting}
+                        className={
+                            "inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-extrabold transition " +
+                            (selecting
+                                ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+                                : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300")
+                        }
+                    >
+                        <AdminIcon name="scale" size={16} stroke={2.4} />
+                        Eşdeğer olarak eşleştir
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDrawerOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-[#052e2b] transition hover:bg-emerald-400"
+                    >
+                        <AdminIcon name="plus" size={16} stroke={2.6} />
+                        Ürün ekle
+                    </button>
+                </div>
             </div>
 
             {message && (
@@ -135,7 +210,10 @@ export function PortalBasket({
                             <table className="w-full text-left text-sm">
                                 <thead className="text-xs uppercase tracking-wider text-zinc-500">
                                     <tr>
-                                        <th className="px-[18px] py-3 font-bold">Ürün</th>
+                                        {selecting && <th className="w-10 px-[18px] py-3"></th>}
+                                        <th className={selecting ? "px-3 py-3 font-bold" : "px-[18px] py-3 font-bold"}>
+                                            Ürün
+                                        </th>
                                         {stores.map((store) => (
                                             <th key={store} className="px-3 py-3 font-bold">
                                                 {store}
@@ -151,9 +229,48 @@ export function PortalBasket({
                                             .filter((p): p is number => p !== null);
                                         const cheapest = priced.length ? Math.min(...priced) : null;
                                         const id = Number(g.key);
+                                        const checked = selected.has(g.key);
                                         return (
-                                            <tr key={g.key} className="border-t border-zinc-800">
-                                                <td className="px-[18px] py-3 font-extrabold">{g.name}</td>
+                                            <tr
+                                                key={g.key}
+                                                className={
+                                                    "border-t border-zinc-800 " +
+                                                    (g.manual ? "bg-emerald-500/[0.04]" : "")
+                                                }
+                                            >
+                                                {selecting && (
+                                                    <td className="px-[18px] py-3">
+                                                        {!g.manual && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleSelect(g.key)}
+                                                                className={
+                                                                    "grid h-[19px] w-[19px] place-items-center rounded-[6px] border-[1.5px] transition " +
+                                                                    (checked
+                                                                        ? "border-emerald-500 bg-emerald-500 text-[#052e2b]"
+                                                                        : "border-zinc-600")
+                                                                }
+                                                            >
+                                                                {checked && (
+                                                                    <AdminIcon name="check" size={11} stroke={3.2} />
+                                                                )}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                <td className={selecting ? "px-3 py-3" : "px-[18px] py-3"}>
+                                                    <b className="font-extrabold">{g.name}</b>
+                                                    {g.manual && (
+                                                        <>
+                                                            <span className="ml-1.5 inline-flex items-center gap-1 rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-300">
+                                                                Sen eşleştirdin
+                                                            </span>
+                                                            <span className="mt-0.5 block text-[11px] font-semibold text-zinc-500">
+                                                                {g.rows.map((r) => `${r.source}: ${r.name}`).join(" · ")}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </td>
                                                 {stores.map((store) => {
                                                     const p = priceFor(g, store);
                                                     const isCheapest = p !== null && p === cheapest;
@@ -174,15 +291,27 @@ export function PortalBasket({
                                                     );
                                                 })}
                                                 <td className="px-3 py-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemove(id)}
-                                                        disabled={pendingId === id}
-                                                        aria-label={`${g.name} kaldır`}
-                                                        className="grid h-[26px] w-[26px] place-items-center rounded-lg border border-zinc-800 text-zinc-500 transition hover:border-red-400 hover:text-red-400 disabled:opacity-40"
-                                                    >
-                                                        <AdminIcon name="x" size={13} stroke={2.6} />
-                                                    </button>
+                                                    {g.manual ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleUnlink(g.matchId as number)}
+                                                            aria-label="Eşleştirmeyi kaldır"
+                                                            title="Eşleştirmeyi kaldır"
+                                                            className="grid h-[26px] w-[26px] place-items-center rounded-lg border border-zinc-800 text-zinc-500 transition hover:border-amber-400 hover:text-amber-300"
+                                                        >
+                                                            <AdminIcon name="refresh" size={13} stroke={2.4} />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemove(id)}
+                                                            disabled={pendingId === id}
+                                                            aria-label={`${g.name} kaldır`}
+                                                            className="grid h-[26px] w-[26px] place-items-center rounded-lg border border-zinc-800 text-zinc-500 transition hover:border-red-400 hover:text-red-400 disabled:opacity-40"
+                                                        >
+                                                            <AdminIcon name="x" size={13} stroke={2.6} />
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -190,7 +319,8 @@ export function PortalBasket({
                                 </tbody>
                                 <tfoot>
                                     <tr className="border-t-2 border-zinc-800">
-                                        <td className="px-[18px] py-4 font-extrabold">
+                                        {selecting && <td></td>}
+                                        <td className={selecting ? "px-3 py-4 font-extrabold" : "px-[18px] py-4 font-extrabold"}>
                                             Toplam ({groups.length} ürün)
                                         </td>
                                         {storeStats.map((s) => (
@@ -210,6 +340,29 @@ export function PortalBasket({
                             </table>
                         </div>
                     </div>
+
+                    {selecting && selected.size >= 2 && (
+                        <div className="ad-in mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-500 bg-[#0e1f1c] px-[18px] py-3.5 shadow-[0_18px_38px_-20px_rgba(16,185,129,0.5)]">
+                            <b className="text-[13.5px]">{selected.size} ürün seçildi</b>
+                            <span className="text-xs text-zinc-500">
+                                Farklı markette olan bu ürünleri &quot;eşdeğer&quot; olarak birleştir
+                            </span>
+                            <button
+                                type="button"
+                                onClick={toggleSelecting}
+                                className="ml-auto rounded-lg border border-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-400"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMatchModalOpen(true)}
+                                className="rounded-lg bg-emerald-500 px-3.5 py-1.5 text-xs font-extrabold text-[#052e2b]"
+                            >
+                                Eşleştir →
+                            </button>
+                        </div>
+                    )}
 
                     <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                         {storeStats.map((s) => {
@@ -262,8 +415,61 @@ export function PortalBasket({
                     <p className="mt-4 text-[12.5px] text-zinc-500">
                         Sadece listene eklediğin ürünler burada görünür. Tek markette olan ürünler de
                         eklenebilir; kıyaslama sadece birden fazla markette bulunanlar için otomatik çıkar.
+                        Farklı marka ama aynı ihtiyacı karşılayan ürünleri &quot;Eşdeğer olarak eşleştir&quot;
+                        ile elle birleştirebilirsin.
                     </p>
                 </>
+            )}
+
+            {matchModalOpen && (
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4">
+                    <div className="w-full max-w-[400px] rounded-[20px] border border-zinc-800 bg-[#0c1817] p-[22px]">
+                        <h3 className="text-base font-extrabold">Eşdeğer olarak eşleştir</h3>
+                        <p className="mb-4 mt-1 text-[12.5px] text-zinc-500">
+                            Bu ürünler farklı markette/markada ama aynı ihtiyacı karşılıyorsa birleştirip
+                            tek satırda kıyaslayabilirsin.
+                        </p>
+                        <div className="mb-4 flex flex-col gap-2">
+                            {selectedGroups.map((g) => (
+                                <div
+                                    key={g.key}
+                                    className="rounded-xl border border-zinc-800 px-3 py-2.5 text-[13px] font-bold"
+                                >
+                                    {g.name}
+                                </div>
+                            ))}
+                        </div>
+                        <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                            Bu grup için bir isim ver
+                        </label>
+                        <input
+                            type="text"
+                            value={matchName}
+                            onChange={(e) => setMatchName(e.target.value)}
+                            placeholder="örn. Tavuk eti"
+                            className="mb-4 w-full rounded-[10px] border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-emerald-500"
+                        />
+                        <div className="flex justify-end gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setMatchModalOpen(false);
+                                    setMatchName("");
+                                }}
+                                className="rounded-[10px] border border-zinc-800 px-3.5 py-2 text-[13px] font-bold text-zinc-400"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmMatch}
+                                className="rounded-[10px] bg-emerald-500 px-4 py-2 text-[13px] font-extrabold text-[#052e2b]"
+                            >
+                                Eşleştir
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {drawerOpen && (

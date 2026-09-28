@@ -22,6 +22,7 @@ class PriceResult:
     price: float
     currency: str
     in_stock: bool | None
+    method: str | None = None
 
 
 def _find_offer(node):

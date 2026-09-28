@@ -66,16 +66,30 @@ export default async function BasketPage() {
     // Müşterinin alışveriş listesine eklediği ürünler.
     const { data: basketData } = await supabase
         .from("basket_items")
-        .select(`product_id, added_at, products(${productSelect})`)
+        .select(`product_id, added_at, match_id, basket_matches(name), products(${productSelect})`)
         .eq("customer_id", customer.id)
         .order("added_at", { ascending: true });
 
-    const basketProducts = ((basketData ?? []) as {
+    type MatchName = { name: string } | { name: string }[] | null;
+
+    const basketEntries = ((basketData ?? []) as {
         product_id: number;
+        match_id: number | null;
+        basket_matches: MatchName;
         products: ProductRow | ProductRow[] | null;
     }[])
-        .map((b) => (Array.isArray(b.products) ? b.products[0] : b.products))
-        .filter((p): p is ProductRow => !!p);
+        .map((b) => {
+            const product = Array.isArray(b.products) ? b.products[0] : b.products;
+            if (!product) return null;
+            const matchField = b.basket_matches;
+            const matchName = Array.isArray(matchField)
+                ? (matchField[0]?.name ?? null)
+                : (matchField?.name ?? null);
+            return { product, matchId: b.match_id, matchName };
+        })
+        .filter((e): e is { product: ProductRow; matchId: number | null; matchName: string | null } => !!e);
+
+    const basketProducts = basketEntries.map((e) => e.product);
 
     // Sepetteki ürünlerin bağlı olduğu karşılaştırma grupları (diğer marketleri bulmak için).
     const groupKeys = [
@@ -95,7 +109,8 @@ export default async function BasketPage() {
 
     const inGroups = (groupData ?? []) as ProductRow[];
 
-    const groups: BasketGroup[] = basketProducts.map((item) => {
+    const rawGroups = basketEntries.map((entry) => {
+        const item = entry.product;
         const siblings = item.comparison_group
             ? inGroups.filter((p) => p.comparison_group === item.comparison_group)
             : [];
@@ -104,14 +119,46 @@ export default async function BasketPage() {
         for (const p of siblings) rows.set(p.id, p);
         return {
             key: String(item.id),
-            name: item.name,
+            matchId: entry.matchId,
+            matchName: entry.matchName,
+            primaryName: item.name,
             rows: [...rows.values()].map((p) => ({
                 source: sourceName(p.sources),
                 price: p.current_price !== null ? Number(p.current_price) : null,
                 currency: p.currency,
+                name: p.name,
             })),
         };
     });
+
+    const merged = new Map<string, BasketGroup>();
+    for (const g of rawGroups) {
+        if (g.matchId !== null) {
+            const key = `match-${g.matchId}`;
+            const existing = merged.get(key);
+            if (existing) {
+                existing.rows.push(...g.rows);
+            } else {
+                merged.set(key, {
+                    key,
+                    name: g.matchName ?? "Eşleştirilmiş ürünler",
+                    manual: true,
+                    matchId: g.matchId,
+                    rows: [...g.rows],
+                });
+            }
+        } else {
+            merged.set(g.key, {
+                key: g.key,
+                name: g.primaryName,
+                manual: false,
+                matchId: null,
+                rows: g.rows,
+            });
+        }
+    }
+
+    const groups: BasketGroup[] = [...merged.values()];
 
     // Ekleme panelinde önerilecek ürünler: sepette henüz aynı grup/ürün olarak yer almayanlar.
     const usedGroups = new Set(
@@ -156,6 +203,6 @@ export default async function BasketPage() {
             })),
         };
     });
-    
+
     return <PortalBasket groups={groups} candidates={candidates} />;
 }

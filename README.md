@@ -153,6 +153,16 @@ otomatik olarak aynı satırda gösterilir ve satıcı bazında toplam hesaplan�
 ucuz satıcı vurgulanır; tek satıcıdan takip edilen ürünler de eklenebilir,
 sadece kıyaslama çıkmaz.
 
+Farklı marka ama aynı ihtiyacı karşılayan ürünler (örn. bir markette Banvit
+Tavuk Göğsü, başka markette Erpiliç Tavuk But) admin panelinde aynı
+karşılaştırma grubuna konamaz, çünkü gerçekte aynı ürün değiller. Bunun için
+müşteri, sepetindeki iki veya daha fazla ürünü elle **"eşdeğer" olarak
+eşleştirebilir**: "Eşdeğer olarak eşleştir" ile seçim moduna girer, ürünleri
+işaretler, bir grup ismi verir (`basket_matches` tablosu: `customer_id`,
+`name`; `basket_items.match_id` bu gruba bağlanır). Eşleştirilen ürünler tek
+satırda, her birinin hangi markette hangi ürün olduğu küçük bir alt yazıyla
+birlikte gösterilir; eşleştirme istendiği an geri alınabilir.
+
 Portalın veritabanı erişimi satır bazlı güvenlik (RLS) kurallarıyla sağlanır:
 müşteri sadece kendi `customers`, `subscriptions`, `customer_requests`,
 `notification_log` ve takip ettiği ürünlerin `price_history` satırlarını
@@ -270,7 +280,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Botlara engel koyan siteleri (örn. CarrefourSA, Cloudflare kullanır) okumak için
+Botlara engel koyan siteleri (örn. Cloudflare kullananları) okumak için
 gerçek bir tarayıcı gerekir. Bunun için Playwright'ı ve Chromium'u bir kez kur:
 
 ```powershell
@@ -358,18 +368,33 @@ Hangi ürünün hangi yöntemle okunacağı, ürünün **kaynağının** yöntem
 belirlenir (`sources.method`, panelde Kaynaklar sayfası). Şu an iki yöntem
 çalışır durumdadır:
 
-- **JSON-LD (sayfa verisi)**: düz HTTP isteği ile sayfadaki JSON-LD fiyat verisi
-  okunur (örn. Migros). Hızlıdır.
-- **Tarayıcı (Playwright)**: headless Chromium ile sayfa açılır ve aynı JSON-LD
-  verisi okunur (örn. CarrefourSA). Cloudflare gibi bot korumasını geçmek için
-  varsayılan "HeadlessChrome" kimliği yerine normal bir Chrome kimliği
-  kullanılır. Her sayfa birkaç saniye sürer. Kontrolcü tarayıcıyı yalnızca bu
-  yöntemdeki ürünler için başlatır.
+- **JSON-LD (sayfa verisi)**: düz HTTP isteği ile sayfadaki JSON-LD fiyat verisi okunur. Hızlıdır.
+- **Tarayıcı (Playwright)**: headless Chromium ile sayfa açılır (`bot/adapters/browser.py`).
+  Cloudflare gibi bot korumasını geçmek için varsayılan "HeadlessChrome" kimliği
+  yerine normal bir Chrome kimliği kullanılır. Sayfa açıldıktan sonra fiyat,
+  sırayla dört ayrı ayrıştırıcıyla aranır, ilk bulan kazanır:
+  1. **JSON-LD** (`adapters/json_ld.py`) — sayfanın kendi JSON-LD fiyat verisi.
+  2. **`__NEXT_DATA__`** (`adapters/next_data.py`) — Next.js sitelerinin
+     sayfaya gömdüğü JSON içindeki fiyat.
+  3. **`data-testid`** (`adapters/data_testid.py`) — sayfanın düz HTML'inde
+     `data-testid="discountedPrice"` etiketli fiyat kutusu.
+  4. **CSS class'ı `normalPrice`** (`adapters/price_class.py`) — class adı
+     "...normalPrice" ile biten fiyat kutusu.
 
-Yeni bir market eklerken önce düz HTTP ile (JSON-LD) denenmelidir; site 403
-veriyorsa kaynağın yöntemi "Tarayıcı (Playwright)" yapılır. Sunucunun IP adresi
-Cloudflare tarafından farklı değerlendirilebileceği için, canlıya alırken
-tarayıcı yöntemi orada da denenmelidir.
+  Her sayfa birkaç saniye sürer. Kontrolcü tarayıcıyı yalnızca bu yöntemdeki
+  ürünler için başlatır. Hangi alt yöntemin tuttuğu ürünün `last_status`
+  alanına yazılır (`"ok · next_data"` gibi) ve admin panelde Ürünler
+  sayfasındaki **Yöntem** sütununda görünür; bu sütun boşsa ürün doğrudan
+  JSON-LD/HTTP ile okunmuş demektir.
+
+Yeni bir kaynak eklerken önce düz HTTP ile (JSON-LD) denenmelidir; site 403
+veriyorsa kaynağın yöntemi "Tarayıcı (Playwright)" yapılır — bu durumda dört
+alt yöntemden hangisinin uyduğunu bot kendisi bulur, elle seçim yapılmaz.
+Sunucunun IP adresi bot koruması tarafından farklı değerlendirilebileceği
+için, canlıya alırken tarayıcı yöntemi orada da denenmelidir. Bazı siteler
+ürün sayfasını teslimat adresine göre kişiselleştirir; adres seçilmemiş bir
+oturumdan bazı ürünler gerçekte satışta olsa da 404 dönebilir — bu bot hatası
+değildir, ilgili ürün admin panelden pasif yapılabilir.
 
 ## Yapılanlar
 
@@ -410,6 +435,7 @@ tarayıcı yöntemi orada da denenmelidir.
 - [x] Admin paneli yenilendi (3. aşama): Takipler ve Müşteriler sayfaları, panelden müşteri planı değiştirme
 - [x] Müşteri portalı yenilendi: koyu tema, yan menü, geniş ürün sayfası, bildirimler, gelişmiş talep formu, Planım
 - [x] Premium: Haftalık ve aylık rapor ile Satıcılar arası ürün kıyası (aynı ürünün market kayıtları admin panelinde "Karşılaştırma grubu" ile bağlanır)
-- [x] Premium: Alışveriş listesi (Market ürünlerinden sepet oluşturma, satıcı bazında toplam kıyaslama)
-- [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için (CarrefourSA); kaynağın yöntemine göre okuyucu seçimi
+- [x] Premium: Alışveriş listesi (Market ürünlerinden sepet oluşturma, satıcı bazında toplam kıyaslama, farklı markaları elle "eşdeğer" olarak eşleştirme)
+- [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için; JSON-LD, __NEXT_DATA__, data-testid, CSS class fiyat kutusu olmak üzere 4 ayrı ayrıştırıcıyı sırayla dener
+- [x] Panel: Ürünler sayfasında hangi ayrıştırıcının kullanıldığını gösteren "Yöntem" sütunu, liste/grup (karşılaştırma grubuna göre) görünüm anahtarı
 - [x] Panel: ürünlere karşılaştırma grubu alanı

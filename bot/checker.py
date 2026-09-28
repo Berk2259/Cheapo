@@ -71,6 +71,8 @@ def check_product(product: dict):
         }
     ).execute()
 
+    status_text = "ok" if not result.method else f"ok · {result.method}"
+
     (
         supabase.table("products")
         .update(
@@ -78,7 +80,7 @@ def check_product(product: dict):
                 "current_price": result.price,
                 "currency": result.currency,
                 "last_checked_at": now_iso(),
-                "last_status": "ok",
+                "last_status": status_text,
                 "force_check_requested": False,
             }
         )

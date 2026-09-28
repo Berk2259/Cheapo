@@ -21,7 +21,7 @@ const toneClass = {
 const cardClass = "rounded-2xl border border-zinc-800 bg-zinc-900";
 
 function isError(status: string | null) {
-  return !!status && status !== "ok";
+  return !!status && !status.startsWith("ok");
 }
 
 export default async function AdminHomePage() {
@@ -176,8 +176,9 @@ export default async function AdminHomePage() {
   const statusRows = [
     {
       label: "Güncel",
-      count: productList.filter((p) => p.is_active && p.last_status === "ok")
-        .length,
+      count: productList.filter(
+        (p) => p.is_active && p.last_status?.startsWith("ok"),
+      ).length,
       color: "#2dd4bf",
     },
     {

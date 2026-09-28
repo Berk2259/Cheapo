@@ -65,13 +65,15 @@ export function ProductRow({
       })
     : "Henüz kontrol edilmedi";
 
-  const hasError = product.last_status && product.last_status !== "ok";
+  const isOk = product.last_status?.startsWith("ok") ?? false;
+  const hasError = !!product.last_status && !isOk;
+  const method = isOk ? product.last_status?.split("·")[1]?.trim() : null;
 
   const status = !product.is_active
     ? { label: "Pasif", cls: "bg-zinc-700/40 text-zinc-400", dot: false }
     : hasError
       ? { label: "Okunamadı", cls: "bg-red-500/15 text-red-400", dot: false }
-      : product.last_status === "ok"
+      : isOk
         ? { label: "Güncel", cls: "bg-emerald-500/15 text-emerald-400", dot: true }
         : { label: "Sırada", cls: "bg-amber-400/15 text-amber-300", dot: false };
 
@@ -125,6 +127,15 @@ export function ProductRow({
           >
             {product.last_status}
           </p>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        {method ? (
+          <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs font-bold text-zinc-400">
+            {method}
+          </span>
+        ) : (
+          <span className="text-xs text-zinc-600">—</span>
         )}
       </td>
       <td className="px-4 py-3">

@@ -1,6 +1,9 @@
 from playwright.sync_api import sync_playwright
 
-from adapters.json_ld import PriceResult, parse_price
+from adapters.json_ld import PriceResult, parse_price as parse_json_ld
+from adapters.next_data import parse_price as parse_next_data
+from adapters.data_testid import parse_price as parse_data_testid
+from adapters.price_class import parse_price as parse_price_class
 
 # Botlara engel koyan siteler (Cloudflare gibi) için gerçek tarayıcıyla okur.
 # "HeadlessChrome" yerine normal bir Chrome kimliği kullanılır.
@@ -30,4 +33,26 @@ def fetch_price(url: str) -> PriceResult:
         finally:
             browser.close()
 
-    return parse_price(html)
+    # Sırayla dener: JSON-LD -> Next.js __NEXT_DATA__ -> data-testid fiyat
+    # kutusu -> class adı "normalPrice" ile biten fiyat kutusu (örn. A101).
+    try:
+        result = parse_json_ld(html)
+        result.method = "json_ld"
+        return result
+    except ValueError:
+        pass
+    try:
+        result = parse_next_data(html)
+        result.method = "next_data"
+        return result
+    except ValueError:
+        pass
+    try:
+        result = parse_data_testid(html)
+        result.method = "data_testid"
+        return result
+    except ValueError:
+        pass
+    result = parse_price_class(html)
+    result.method = "price_class"
+    return result
