@@ -23,7 +23,7 @@ const messages = [
 ];
 
 const chats = [
-    { av: "✈", name: "Fiyat Takip Botu", sub: "bot", on: true },
+    { av: "✈", name: "Cheapo", sub: "bot", on: true },
     { av: "A", name: "Ayşe", sub: "Tamamdır", on: false },
     { av: "M", name: "Market grubu", sub: "Süt aldın mı?", on: false },
     { av: "K", name: "Kaan", sub: "görüşürüz", on: false },
@@ -111,7 +111,7 @@ function MacBook() {
                         </div>
                         <div className="hv-tg-main">
                             <div className="hv-tg-head">
-                                Fiyat Takip Botu<small>bot</small>
+                                Cheapo<small>bot</small>
                             </div>
                             <div className="hv-tg-body">
                                 <ChatBubbles />
@@ -161,7 +161,7 @@ function IPad() {
                 <div className="hv-ipad-banner">
                     <div className="ic">✈</div>
                     <div>
-                        <b>Fiyat Takip Botu</b>
+                        <b>Cheapo</b>
                         🔔 Klavye
                         <br />
                         899 → <span className="font-extrabold text-[#16a34a]">749 TL</span>
@@ -179,7 +179,7 @@ function IPhone() {
                 <div className="hv-island" />
                 <div className="hv-phone-head">
                     <div className="av">✈</div>
-                    Fiyat Takip Botu
+                    Cheapo
                 </div>
                 <div className="hv-phone-body">
                     <ChatBubbles />
@@ -187,7 +187,7 @@ function IPhone() {
                 <div className="hv-phone-banner">
                     <div className="ic">✈</div>
                     <div>
-                        <b>Fiyat Takip Botu · şimdi</b>
+                        <b>Cheapo · şimdi</b>
                         🔔 Süt 1 L
                         <br />
                         32,90 → <span className="new">29,50 TL</span>

@@ -101,7 +101,7 @@ export function FaqChat({ questions }: { questions: Question[] }) {
             <span className="pf-online absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-ink bg-green-400" />
           </div>
           <div>
-            <b className="block leading-tight">Fiyat Takip Botu</b>
+            <b className="block leading-tight">Cheapo</b>
             <small className="text-xs text-[#a9cdc7]">çevrimiçi</small>
           </div>
         </div>

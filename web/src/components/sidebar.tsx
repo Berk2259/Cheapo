@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
+import { Logo } from "@/components/logo";
 
 const icons = {
   home: (
@@ -145,10 +146,8 @@ export function Sidebar({
   return (
     <aside className="fixed inset-y-0 left-0 flex w-60 flex-col border-r border-zinc-800 bg-[#0c1817] px-3 py-4 text-zinc-400">
       <div className="flex items-center gap-2.5 px-2 pb-4 text-[15px] font-extrabold text-zinc-50">
-        <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[linear-gradient(135deg,#5eead4,#0d9488)] text-[#0d2b29]">
-          <Icon name="trend" size={17} />
-        </span>
-        Fiyat Takip
+        <Logo size={32} rounded={10} />
+        Cheapo
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden">

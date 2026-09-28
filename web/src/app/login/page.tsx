@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AdminIcon } from "@/components/admin-icons";
 import { LoginShowcase } from "@/components/login-showcase";
+import { Logo } from "@/components/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,10 +53,8 @@ export default function LoginPage() {
           <div className="pointer-events-none absolute -right-[70px] -top-[70px] h-[260px] w-[260px] rounded-full bg-[radial-gradient(circle,rgba(94,234,212,0.28),transparent_65%)]" />
           <div className="relative">
             <div className="flex items-center gap-2.5 text-base font-extrabold">
-              <span className="grid h-[34px] w-[34px] place-items-center rounded-[11px] bg-white/15">
-                <AdminIcon name="trend" size={18} />
-              </span>
-              Fiyat Takip
+              <Logo size={34} rounded={11} />
+              Cheapo
             </div>
             <h2 className="mt-11 max-w-[320px] text-[28px] font-extrabold leading-[1.28] tracking-[-0.02em]">
               Fiyatları sen değil, biz takip edelim.
@@ -99,8 +98,8 @@ export default function LoginPage() {
         {/* Sağ: form */}
         <div className="flex flex-none items-center bg-[#0e1c1a] p-12 lg:w-[440px]">
           <form onSubmit={handleSubmit} className="w-full">
-            <span className="mb-[18px] grid h-10 w-10 place-items-center rounded-xl bg-[linear-gradient(135deg,#5eead4,#0d9488)] text-[#0d2b29]">
-              <AdminIcon name="trend" size={19} />
+            <span className="mb-[18px] block">
+              <Logo size={40} rounded={12} />
             </span>
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-zinc-50">
               Tekrar hoş geldin

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fiyat Takip Botu",
-  description: "Fiyat takip yönetim paneli",
+  title: "Cheapo",
+  description: "Cheapo Yönetim Paneli",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

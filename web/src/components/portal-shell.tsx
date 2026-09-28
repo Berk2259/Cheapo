@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminIcon, type AdminIconName } from "@/components/admin-icons";
 import { LogoutButton } from "@/components/logout-button";
+import { Logo } from "@/components/logo";
 
 type NavItem = {
   href: string;
@@ -117,10 +118,8 @@ export function PortalShell({
       {/* Masaüstü: yan menü */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-zinc-800 bg-[#0c1817] px-3 py-4 md:flex">
         <div className="flex items-center gap-2.5 px-2 pb-3.5 text-[15px] font-extrabold">
-          <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[linear-gradient(135deg,#5eead4,#0d9488)] text-[#0d2b29]">
-            <AdminIcon name="trend" size={17} />
-          </span>
-          Fiyat Takip
+          <Logo size={32} rounded={10} />
+          Cheapo
         </div>
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -201,10 +200,8 @@ export function PortalShell({
         <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3.5 md:px-7">
             <span className="flex items-center gap-2 text-[15px] font-extrabold md:hidden">
-              <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[linear-gradient(135deg,#5eead4,#0d9488)] text-[#0d2b29]">
-                <AdminIcon name="trend" size={17} />
-              </span>
-              Fiyat Takip
+              <Logo size={32} rounded={10} />
+              Cheapo
             </span>
             <h2 className="hidden text-lg font-bold md:block">{title}</h2>
             <div className="ml-auto flex items-center gap-2.5">

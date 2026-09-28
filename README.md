@@ -1,7 +1,10 @@
-# Price Tracker Bot
+# Cheapo
 
 Admin panelden yönetilen, çok müşterili ve kategorili fiyat takip sistemi.
-Fiyat değişimlerinde müşterilere Telegram bildirimi gider.
+Fiyat değişimlerinde müşterilere Telegram bildirimi gider. Ürünün adı
+"Cheapo", logosu `web/public/logo.png` (site içinde `Logo` bileşeni ile
+kullanılır); repo ve klasör adı geriye dönük uyumluluk için `Price_Tracker_Bot`
+olarak kalıyor.
 
 ## Klasör yapısı
 
@@ -11,17 +14,17 @@ Price_Tracker_Bot/
 │   ├── main.py        Telegram botu (müşteri bağlama)
 │   ├── checker.py     Fiyat kontrolcüsü (fiyatı okur ve kaydeder)
 │   ├── notifier.py    Fiyat değişiminde Telegram bildirimi
-│   ├── adapters/      Fiyat okuyucular (json_ld.py: düz HTTP, browser.py: gerçek tarayıcı)
+│   ├── adapters/      Fiyat okuyucular (json_ld.py: düz HTTP; browser.py: gerçek tarayıcı, sırayla json_ld/next_data/data_testid/price_class dener)
 │   ├── requirements.txt
 │   └── .env           Gizli anahtarlar (GitHub'a gitmez)
 ├── web/
 │   ├── src/app/admin/     Admin sayfaları (giriş, talepler, müşteri talepleri, müşteriler, kategoriler, kaynaklar, ürünler, takipler, fiyat geçmişi, bildirimler)
 │   ├── src/app/login/     Tek giriş sayfası (admin ve müşteri için)
-│   ├── src/app/portal/    Müşteri portalı (ürünlerim, bildirimler, talepler, plan, rapor, kıyas)
+│   ├── src/app/portal/    Müşteri portalı (ürünlerim, bildirimler, talepler, plan, rapor, kıyas, alışveriş listesi)
 │   ├── src/app/page.tsx   Herkese açık tanıtım sayfası (landing page)
 │   ├── src/lib/supabase/  Supabase bağlantıları (tarayıcı ve sunucu)
 │   ├── src/proxy.ts       Giriş koruması
-│   ├── src/components/    Ortak bileşenler (yan menü, butonlar, talep formu)
+│   ├── src/components/    Ortak bileşenler (yan menü, butonlar, talep formu, logo)
 │   ├── src/components/landing/  Landing page bölümleri (hero, 3 adımda hazır, kategoriler, SSS, planlar, talep)
 │   └── .env.local         Panel ayarları (GitHub'a gitmez)
 └── supabase/          Veritabanı şema dosyaları (SQL)

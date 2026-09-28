@@ -54,7 +54,10 @@ export function PortalCompare({
       cheapest && spread > 0 ? (spread / (cheapest.price as number)) * 100 : 0;
     // Satırlarda marketler farklıysa market adını, aynı market ise ürün adını başlık yap.
     const showMarket = new Set(g.rows.map((r) => r.source)).size > 1;
-    const title = g.rows[0]?.name ?? g.key;
+    const nameCounts = new Map<string, number>();
+    for (const r of g.rows) nameCounts.set(r.name, (nameCounts.get(r.name) ?? 0) + 1);
+    const title =
+      [...nameCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? g.key;
     return { g, sorted, cheapest, spread, spreadPct, showMarket, title };
   });
 
@@ -67,6 +70,8 @@ export function PortalCompare({
     ? analysed.reduce((s, a) => s + a.spreadPct, 0) / analysed.length
     : 0;
 
+  const totalSavings = analysed.reduce((sum, a) => sum + a.spread, 0);
+
   const tiles = [
     {
       label: "Karşılaştırılan",
@@ -74,6 +79,13 @@ export function PortalCompare({
       text: "ürün marketlerde kıyaslanıyor",
       icon: "scale" as const,
       tone: "bg-emerald-500/15 text-emerald-400",
+    },
+    {
+      label: "Toplam kazanç",
+      value: money(totalSavings, currency),
+      text: "her üründe en ucuzu seçersen",
+      icon: "coin" as const,
+      tone: "bg-green-400/15 text-green-400",
     },
     {
       label: "En büyük fark",
@@ -115,7 +127,7 @@ export function PortalCompare({
         </div>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3.5 lg:grid-cols-5">
             {tiles.map((t, i) => (
               <div
                 key={t.label}
@@ -170,8 +182,8 @@ export function PortalCompare({
                   const diff =
                     cheapest && r.price !== null
                       ? ((r.price - (cheapest.price as number)) /
-                          (cheapest.price as number)) *
-                        100
+                        (cheapest.price as number)) *
+                      100
                       : 0;
                   const barWidth =
                     cheapest && r.price !== null
