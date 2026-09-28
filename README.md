@@ -148,9 +148,14 @@ kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna*
 takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.
 "Destekle yaz" ve "Premium için yaz" düğmeleri şimdilik yalnızca görünümdür.
 
-Alışveriş listesi, müşterinin **kendi seçtiği** Market kategorisi ürünlerinden
-oluşur (`basket_items` tablosu, `customer_id` + `product_id`); "Ürün ekle"
-panelinden eklenmeyen hiçbir ürün listede görünmez. Eklenen ürün bir
+Alışveriş listesi tek bir sepetten ibaret değildir: müşteri **birden fazla
+sepet** oluşturabilir (`basket_lists` tablosu: `customer_id`, `name`,
+`category_id`), her sepetin bir **sektörü** (kategorisi) vardır ve "Ürün ekle"
+paneli o sepette sadece aynı sektördeki takip edilen ürünleri önerir. Sepetler
+üstteki şeritte sekme gibi durur; sekmenin ⋮ menüsünden yeniden adlandırılabilir
+ya da silinebilir (silinince içindeki ürünler de gider). Bir sepetin içindeki
+ürünler `basket_items` tablosunda tutulur (`list_id` + `product_id`); "Ürün
+ekle" panelinden eklenmeyen hiçbir ürün listede görünmez. Eklenen ürün bir
 karşılaştırma grubuna bağlıysa, o gruptaki diğer satıcıların fiyatları da
 otomatik olarak aynı satırda gösterilir ve satıcı bazında toplam hesaplanıp en
 ucuz satıcı vurgulanır; tek satıcıdan takip edilen ürünler de eklenebilir,
@@ -353,7 +358,16 @@ Panel `http://localhost:3000` adresinde açılır.
 Ek olarak:
 
 - `products.comparison_group`: aynı grup adını taşıyan ürünler aynı ürünün farklı
-  farklı satıcılardaki kayıtlarıdır (Ürün kıyası bu alanı kullanır).
+  farklı satıcılardaki kayıtlarıdır (Ürün kıyası ve Alışveriş listesi bu alanı
+  kullanır). Admin panelde Ürünler sayfasının liste/grup görünüm anahtarıyla bu
+  gruplar kart halinde bir arada görülebilir.
+- `basket_lists`: müşterinin oluşturduğu sepetler (`customer_id`, `name`,
+  `category_id`). Her sepetin bir sektörü vardır; "Ürün ekle" paneli o sepette
+  sadece aynı sektördeki ürünleri önerir.
+- `basket_items`: bir sepete eklenen ürünler (`list_id`, `product_id`,
+  `match_id`).
+- `basket_matches`: müşterinin elle "eşdeğer" olarak birleştirdiği ürün
+  grupları (`customer_id`, `name`).
 - `price_daily` (görünüm): `price_history`'nin günlük son fiyat özeti (Türkiye
   saatine göre). `security_invoker` ile çalışır, yani sorgulayan kullanıcının
   RLS izinleri geçerlidir.
@@ -438,7 +452,7 @@ değildir, ilgili ürün admin panelden pasif yapılabilir.
 - [x] Admin paneli yenilendi (3. aşama): Takipler ve Müşteriler sayfaları, panelden müşteri planı değiştirme
 - [x] Müşteri portalı yenilendi: koyu tema, yan menü, geniş ürün sayfası, bildirimler, gelişmiş talep formu, Planım
 - [x] Premium: Haftalık ve aylık rapor ile Satıcılar arası ürün kıyası (aynı ürünün market kayıtları admin panelinde "Karşılaştırma grubu" ile bağlanır)
-- [x] Premium: Alışveriş listesi (Market ürünlerinden sepet oluşturma, satıcı bazında toplam kıyaslama, farklı markaları elle "eşdeğer" olarak eşleştirme)
+- [x] Premium: Alışveriş listesi (sektöre göre birden fazla sepet oluşturma/yeniden adlandırma/silme, satıcı bazında toplam kıyaslama, farklı markaları elle "eşdeğer" olarak eşleştirme)
 - [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için; JSON-LD, __NEXT_DATA__, data-testid, CSS class fiyat kutusu olmak üzere 4 ayrı ayrıştırıcıyı sırayla dener
 - [x] Panel: Ürünler sayfasında hangi ayrıştırıcının kullanıldığını gösteren "Yöntem" sütunu, liste/grup (karşılaştırma grubuna göre) görünüm anahtarı
 - [x] Panel: ürünlere karşılaştırma grubu alanı
