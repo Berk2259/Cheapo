@@ -121,13 +121,17 @@ export async function updateProduct(
 
 export async function deleteProduct(id: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const { error } = await supabase
+    .from("products")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   if (error) {
     return { ok: false, message: "Silinemedi." };
   }
 
   revalidatePath("/admin/products");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }
 

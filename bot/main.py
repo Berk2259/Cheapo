@@ -30,6 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         supabase.table("customers")
         .select("id, name")
         .eq("link_token", token)
+        .is_("deleted_at", "null")
         .execute()
     )
     if not result.data:

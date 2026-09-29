@@ -32,13 +32,17 @@ export async function updateLeadStatus(
 
 export async function deleteLead(id: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("leads").delete().eq("id", id);
+  const { error } = await supabase
+    .from("leads")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   if (error) {
     return { ok: false, message: "Silinemedi." };
   }
 
   revalidatePath("/admin/leads");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }
 

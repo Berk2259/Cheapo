@@ -54,3 +54,19 @@ export async function updateCustomerRequestStatus(
   revalidatePath("/admin/subscriptions");
   return { ok: true };
 }
+
+export async function deleteCustomerRequest(id: number): Promise<Result> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customer_requests")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    return { ok: false, message: "Silinemedi." };
+  }
+
+  revalidatePath("/admin/customer-requests");
+  revalidatePath("/admin/trash");
+  return { ok: true };
+}

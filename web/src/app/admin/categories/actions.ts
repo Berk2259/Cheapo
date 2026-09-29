@@ -61,18 +61,16 @@ export async function updateCategory(
 
 export async function deleteCategory(id: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("categories").delete().eq("id", id);
+  const { error } = await supabase
+    .from("categories")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   if (error) {
-    return {
-      ok: false,
-      message:
-        error.code === "23503"
-          ? "Bu kategoriye bağlı ürünler var. Önce ürünleri başka kategoriye taşı ya da sil."
-          : "Silinemedi.",
-    };
+    return { ok: false, message: "Silinemedi." };
   }
 
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }

@@ -46,9 +46,10 @@ async def notify_one(bot: Bot, product: dict, old_price: float, new_price: float
         supabase.table("subscriptions")
         .select(
             "target_price, notify_on_any_change, "
-            "customers(id, name, telegram_chat_id, is_active)"
+            "customers(id, name, telegram_chat_id, is_active, deleted_at)"
         )
         .eq("product_id", product["id"])
+        .is_("deleted_at", "null")
         .execute()
         .data
     )
@@ -57,7 +58,9 @@ async def notify_one(bot: Bot, product: dict, old_price: float, new_price: float
 
     for sub in subs:
         customer = sub["customers"]
-        if not customer or not customer["is_active"] or not customer["telegram_chat_id"]:
+        if not customer or customer["deleted_at"]:
+            continue
+        if not customer["is_active"] or not customer["telegram_chat_id"]:
             continue
         if not should_notify(sub, old_price, new_price):
             continue

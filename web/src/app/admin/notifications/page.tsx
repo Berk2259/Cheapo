@@ -17,10 +17,11 @@ export default async function NotificationsPage({
     supabase
       .from("notification_log")
       .select("id, customer_id, product_id, message, sent_at")
+      .is("deleted_at", null)
       .order("sent_at", { ascending: false })
       .limit(100),
-    supabase.from("customers").select("id, name").order("name"),
-    supabase.from("products").select("id, name"),
+    supabase.from("customers").select("id, name").is("deleted_at", null).order("name"),
+    supabase.from("products").select("id, name").is("deleted_at", null),
   ]);
 
   const customerList = customers.data ?? [];

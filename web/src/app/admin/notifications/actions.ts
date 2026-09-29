@@ -9,7 +9,7 @@ export async function deleteNotification(
   const supabase = await createClient();
   const { error } = await supabase
     .from("notification_log")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) {
@@ -17,5 +17,6 @@ export async function deleteNotification(
   }
 
   revalidatePath("/admin/notifications");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }

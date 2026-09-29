@@ -104,6 +104,7 @@ def run_check_cycle() -> None:
                         "id, name, url, current_price, last_checked_at, check_interval_minutes, force_check_requested, sources(method)"
         )
         .eq("is_active", True)
+        .is_("deleted_at", "null")
         .execute()
         .data
     )

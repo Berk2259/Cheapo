@@ -43,9 +43,17 @@ export async function proxy(request: NextRequest) {
   if (user && (isAdminRoute || isPortalRoute || isLoginPage)) {
     const { data: customer } = await supabase
       .from("customers")
-      .select("id")
+      .select("id, deleted_at")
       .eq("auth_user_id", user.id)
       .maybeSingle();
+
+    if (customer?.deleted_at) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("removed", "1");
+      return NextResponse.redirect(url);
+    }
 
     const isCustomer = Boolean(customer);
 

@@ -10,6 +10,7 @@ export default async function LeadsPage() {
     .select(
       "id, name, contact, plan_requested, category_interest, note, status, created_at, converted_customer_id",
     )
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   const items = (leads ?? []).map((lead) => ({

@@ -13,10 +13,11 @@ export default async function CustomersPage() {
         .select(
           "id, name, telegram_chat_id, link_token, is_active, created_at, plan, auth_user_id",
         )
+        .is("deleted_at", null)
         .order("id"),
-      supabase.from("categories").select("id, name").order("name"),
+      supabase.from("categories").select("id, name").is("deleted_at", null).order("name"),
       supabase.from("customer_categories").select("customer_id, category_id"),
-      supabase.from("subscriptions").select("customer_id"),
+      supabase.from("subscriptions").select("customer_id").is("deleted_at", null),
     ]);
 
   const categoryList = categories.data ?? [];

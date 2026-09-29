@@ -13,7 +13,19 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   // Menüdeki kırmızı rozetler: durumu "bekliyor" olan kayıtların sayısı.
-  const [leads, customerRequests] = await Promise.all([
+  const trashTables = [
+    "products",
+    "sources",
+    "categories",
+    "customers",
+    "subscriptions",
+    "leads",
+    "notification_log",
+    "price_history",
+    "customer_requests",
+  ] as const;
+
+  const [leads, customerRequests, ...trashCounts] = await Promise.all([
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
@@ -22,11 +34,20 @@ export default async function AdminLayout({
       .from("customer_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "bekliyor"),
+    ...trashTables.map((table) =>
+      supabase
+        .from(table)
+        .select("*", { count: "exact", head: true })
+        .not("deleted_at", "is", null),
+    ),
   ]);
+
+  const trashTotal = trashCounts.reduce((sum, r) => sum + (r.count ?? 0), 0);
 
   const badges = {
     "/admin/leads": leads.count ?? 0,
     "/admin/customer-requests": customerRequests.count ?? 0,
+    "/admin/trash": trashTotal,
   };
 
   return (

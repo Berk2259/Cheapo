@@ -80,18 +80,16 @@ export async function updateSource(
 
 export async function deleteSource(id: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("sources").delete().eq("id", id);
+  const { error } = await supabase
+    .from("sources")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   if (error) {
-    return {
-      ok: false,
-      message:
-        error.code === "23503"
-          ? "Bu kaynağa bağlı ürünler var. Önce ürünleri başka kaynağa taşı ya da sil."
-          : "Silinemedi.",
-    };
+    return { ok: false, message: "Silinemedi." };
   }
 
   revalidatePath("/admin/sources");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }

@@ -7,8 +7,12 @@ export default async function CategoriesPage() {
   const supabase = await createClient();
 
   const [categories, products, links] = await Promise.all([
-    supabase.from("categories").select("id, name, created_at").order("id"),
-    supabase.from("products").select("category_id"),
+    supabase
+      .from("categories")
+      .select("id, name, created_at")
+      .is("deleted_at", null)
+      .order("id"),
+    supabase.from("products").select("category_id").is("deleted_at", null),
     supabase.from("customer_categories").select("category_id"),
   ]);
 

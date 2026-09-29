@@ -3,7 +3,10 @@
 import { useState, useTransition } from "react";
 import { AdminIcon } from "@/components/admin-icons";
 import { STATUS_OPTIONS } from "@/components/lead-row";
-import { updateCustomerRequestStatus } from "@/app/admin/customer-requests/actions";
+import {
+  deleteCustomerRequest,
+  updateCustomerRequestStatus,
+} from "@/app/admin/customer-requests/actions";
 
 export type CustomerRequest = {
   id: number;
@@ -32,6 +35,17 @@ export function CustomerRequestRow({ request }: { request: CustomerRequest }) {
       } else {
         setMessage(null);
       }
+    });
+  }
+
+  function remove() {
+    const ok = confirm(
+      `"${request.customerName}" müşterisinin bu talebini silmek istediğine emin misin?`,
+    );
+    if (!ok) return;
+    startTransition(async () => {
+      const result = await deleteCustomerRequest(request.id);
+      if (!result.ok) setMessage(result.message ?? "Silinemedi.");
     });
   }
 
@@ -99,6 +113,17 @@ export function CustomerRequestRow({ request }: { request: CustomerRequest }) {
             </option>
           ))}
         </select>
+
+        <button
+          type="button"
+          onClick={remove}
+          disabled={pending}
+          title="Sil"
+          aria-label="Sil"
+          className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[10px] border border-zinc-800 bg-zinc-900 text-zinc-500 transition hover:-translate-y-0.5 hover:border-red-500 hover:text-red-400 disabled:opacity-50"
+        >
+          <AdminIcon name="trash" size={16} />
+        </button>
       </div>
     </div>
   );

@@ -35,9 +35,16 @@ export default function LoginPage() {
 
     const { data: customer } = await supabase
       .from("customers")
-      .select("id")
+      .select("id, deleted_at")
       .eq("auth_user_id", data.user.id)
       .maybeSingle();
+
+    if (customer?.deleted_at) {
+      await supabase.auth.signOut();
+      setError("Bu hesap kaldırılmış. Yardım için yöneticinizle iletişime geçin.");
+      setLoading(false);
+      return;
+    }
 
     router.push(customer ? "/portal" : "/admin");
     router.refresh();

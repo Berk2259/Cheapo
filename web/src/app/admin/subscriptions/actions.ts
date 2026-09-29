@@ -96,12 +96,16 @@ export async function updateSubscription(
 
 export async function deleteSubscription(id: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("subscriptions").delete().eq("id", id);
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   if (error) {
     return { ok: false, message: "Silinemedi." };
   }
 
   revalidatePath("/admin/subscriptions");
+  revalidatePath("/admin/trash");
   return { ok: true };
 }

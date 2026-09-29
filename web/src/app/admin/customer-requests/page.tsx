@@ -27,6 +27,7 @@ export default async function CustomerRequestsPage() {
     .select(
       "id, note, status, created_at, customers(name), categories(name), customer_request_products(products(name))",
     )
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   const requests = ((data ?? []) as Row[]).map((r) => ({

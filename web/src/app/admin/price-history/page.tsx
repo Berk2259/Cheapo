@@ -27,14 +27,15 @@ export default async function PriceHistoryPage({
     .from("price_history")
     .select("id, product_id, price, currency, in_stock, checked_at", {
       count: "exact",
-    });
+    })
+    .is("deleted_at", null);
   if (filtered) {
     recordsQuery = recordsQuery.eq("product_id", productId);
   }
 
   const [records, products] = await Promise.all([
     recordsQuery.order("checked_at", { ascending: false }).range(from, to),
-    supabase.from("products").select("id, name").order("name"),
+    supabase.from("products").select("id, name").is("deleted_at", null).order("name"),
   ]);
 
   const productList = products.data ?? [];

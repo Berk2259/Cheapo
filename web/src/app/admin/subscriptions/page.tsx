@@ -8,14 +8,17 @@ export default async function SubscriptionsPage() {
     supabase
       .from("subscriptions")
       .select("id, customer_id, product_id, target_price, notify_on_any_change")
+      .is("deleted_at", null)
       .order("id"),
     supabase
       .from("customers")
       .select("id, name, telegram_chat_id, is_active")
+      .is("deleted_at", null)
       .order("name"),
     supabase
       .from("products")
       .select("id, name, current_price, currency")
+      .is("deleted_at", null)
       .order("name"),
   ]);
 

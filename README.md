@@ -101,6 +101,10 @@ hesabın `customers` tablosunda bir kaydı olup olmadığına bakar: varsa
 müşteri portalına (`/portal`), yoksa admin panele (`/admin`) yönlendirir.
 Her istekte bu kontrol tekrar yapılır, yani bir müşteri adres çubuğuna elle
 `/admin` yazsa da otomatik olarak `/portal`'a geri gönderilir (ve tersi).
+Müşteri çöp kutusuna atılmışsa (`customers.deleted_at` dolu) bu kontrol
+"kayıt yok" saymaz; oturumu kapatılıp `/login`'e geri gönderilir — yoksa
+"kayıt yoksa admindir" varsayımı yüzünden yanlışlıkla admin paneline
+yönlendirilirdi.
 
 Giriş sayfası koyu temalı, ortada bölünmüş kartlı bir tasarıma sahiptir
 (`components/login-showcase.tsx`, `components/login-showcase-data.ts`).
@@ -410,6 +414,44 @@ için, canlıya alırken tarayıcı yöntemi orada da denenmelidir. Bazı sitele
 oturumdan bazı ürünler gerçekte satışta olsa da 404 dönebilir — bu bot hatası
 değildir, ilgili ürün admin panelden pasif yapılabilir.
 
+## Çöp kutusu (soft delete)
+
+Admin panelde bir kayıt silindiğinde veritabanından hemen kaldırılmaz;
+`deleted_at` sütunu doldurulur ("çöpe atılır") ve normal listelerden kaybolur.
+Gerçek silme yalnızca **Çöp kutusu** sayfasından "Kalıcı olarak sil" ile,
+onay istendikten sonra yapılır. Kapsam: `products`, `sources`, `categories`,
+`customers`, `subscriptions`, `leads`, `notification_log`, `price_history`,
+`customer_requests` — panelde silme işlemi olan her tablo.
+
+Genel action'lar tek dosyada toplanmıştır (`app/admin/trash/actions.ts`):
+`softDelete`, `restoreFromTrash`, `permanentlyDelete`; tablo adı parametre
+olarak verilir. Mevcut "sil" butonlarının fonksiyon imzaları değişmedi, sadece
+içleri artık gerçek `delete` yerine `deleted_at` güncelliyor. Çöp kutusu
+sayfası (`app/admin/trash/page.tsx`) bu 9 tablodan `deleted_at` dolu olan
+kayıtları tek bir listede toplar; arama ve tabloya göre filtre içerir. Sol
+menüdeki "Çöp kutusu" rozeti, çöpteki toplam kayıt sayısını gösterir.
+
+Bunun güvenli çalışması için birkaç yer özellikle düzeltildi:
+- Admin panelindeki tüm ana listeleme sorgularına (`Ürünler`, `Kaynaklar`,
+  `Kategoriler`, `Müşteriler`, `Takipler`, `Talepler`, `Bildirimler`,
+  `Fiyat geçmişi`, `Müşteri talepleri`) `deleted_at is null` filtresi eklendi.
+- `price_daily` görünümü de çöpteki fiyat kayıtlarını hesaba katmayacak
+  şekilde güncellendi (haftalık/aylık rapor bunu kullanıyor).
+- **Bot**: çöpe atılmış bir ürün artık kontrol edilmiyor (`checker.py`),
+  çöpe atılmış bir aboneliğe/müşteriye bildirim gitmiyor (`notifier.py`),
+  çöpe atılmış bir müşteri Telegram'ını bağlayamıyor (`main.py`).
+- **Giriş mantığı**: "müşteri kaydı yoksa admindir" varsayımı yüzünden,
+  çöpe atılmış bir müşteri basitçe filtrelenirse yanlışlıkla admin paneline
+  yönlendirilebilirdi. Bunun yerine `proxy.ts` (asıl güvenlik sınırı) ve
+  `login/page.tsx`, müşteri bulunduğu ama çöpe atılmış olduğu durumu ayrıca
+  kontrol eder: oturum kapatılır, `/login`'e "hesap kaldırılmış" mesajıyla
+  geri gönderilir.
+
+Not: Müşteri portalındaki (customer-facing) bazı sorgular — ör. ürün kıyası,
+alışveriş listesi, portal ana sayfası — henüz `deleted_at` filtresi almadı;
+bu sayfalarda çöpe atılmış bir ürün/kategori kısa süreliğine görünmeye devam
+edebilir. İleride ele alınacak bir sonraki adım.
+
 ## Yapılanlar
 
 - [x] Supabase projesi ve veritabanı şeması (8 tablo)
@@ -453,4 +495,5 @@ değildir, ilgili ürün admin panelden pasif yapılabilir.
 - [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için; JSON-LD, __NEXT_DATA__, data-testid, CSS class fiyat kutusu olmak üzere 4 ayrı ayrıştırıcıyı sırayla dener
 - [x] Panel: Ürünler sayfasında hangi ayrıştırıcının kullanıldığını gösteren "Yöntem" sütunu, liste/grup (karşılaştırma grubuna göre) görünüm anahtarı
 - [x] Panel: uzun listelerde sayfalama (Fiyat geçmişi: sunucu taraflı, sayfa başına 25/50/100/200; Ürünler, Müşteri talepleri, Bildirimler: tarayıcı taraflı, sayfa başına seçilebilir) ve Takipler'de müşteri başına akordiyon (5'ten fazla takibi olan müşteriler varsayılan kapalı başlar)
+- [x] Panel: Çöp kutusu (soft delete) — 9 tabloda silme artık geri yüklenebilir, kalıcı silme onay ister; bot ve giriş mantığı çöpe atılmış kayıtları görmezden gelecek şekilde güncellendi
 - [x] Panel: ürünlere karşılaştırma grubu alanı

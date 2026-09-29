@@ -77,6 +77,15 @@ const icons = {
       <path d="m22 17-8.5-8.5-5 5L2 7" />
     </>
   ),
+  trash: (
+    <>
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </>
+  ),
 };
 
 type IconName = keyof typeof icons;
@@ -130,6 +139,10 @@ const groups: { label: string; items: Item[] }[] = [
       { href: "/admin/price-history", label: "Fiyat geçmişi", icon: "chart" },
       { href: "/admin/notifications", label: "Bildirimler", icon: "bell" },
     ],
+  },
+  {
+    label: "Sistem",
+    items: [{ href: "/admin/trash", label: "Çöp kutusu", icon: "trash" }],
   },
 ];
 

@@ -9,8 +9,9 @@ export default async function SourcesPage() {
     supabase
       .from("sources")
       .select("id, name, method, base_url, is_active")
+      .is("deleted_at", null)
       .order("id"),
-    supabase.from("products").select("source_id, last_status"),
+    supabase.from("products").select("source_id, last_status").is("deleted_at", null),
   ]);
 
   function methodsFor(sourceId: number): string[] {

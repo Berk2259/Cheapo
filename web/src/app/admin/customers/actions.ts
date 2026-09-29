@@ -16,9 +16,13 @@ export async function addCustomer(formData: FormData) {
 
 export async function deleteCustomer(id: number) {
   const supabase = await createClient();
-  await supabase.from("customers").delete().eq("id", id);
+  await supabase
+    .from("customers")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
 
   revalidatePath("/admin/customers");
+  revalidatePath("/admin/trash");
 }
 
 export async function updateCustomer(

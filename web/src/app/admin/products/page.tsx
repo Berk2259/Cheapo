@@ -10,9 +10,10 @@ export default async function ProductsPage() {
       .select(
         "id, name, url, category_id, source_id, current_price, currency, check_interval_minutes, last_checked_at, last_status, is_active, force_check_requested, comparison_group",
       )
+      .is("deleted_at", null)
       .order("id"),
-    supabase.from("categories").select("id, name").order("name"),
-    supabase.from("sources").select("id, name").order("name"),
+    supabase.from("categories").select("id, name").is("deleted_at", null).order("name"),
+    supabase.from("sources").select("id, name").is("deleted_at", null).order("name"),
   ]);
 
   return (
