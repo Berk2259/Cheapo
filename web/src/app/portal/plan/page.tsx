@@ -161,7 +161,7 @@ export default async function PlanPage() {
                             type="button"
                             className="rounded-xl border border-zinc-800 px-3.5 py-2 text-[13px] font-extrabold text-zinc-50"
                         >
-                            Destekle yaz
+                            Destek al
                         </button>
                     ) : (
                         <button

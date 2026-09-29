@@ -61,7 +61,7 @@ export function PortalPlanCard({
               type="button"
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#fbbf24,#f59e0b)] px-4 py-2.5 text-sm font-extrabold text-[#3b2a00] shadow-[0_10px_24px_-10px_#f59e0b] transition hover:-translate-y-0.5"
             >
-              <AdminIcon name="help" size={16} /> Destekle yaz
+              <AdminIcon name="help" size={16} /> Destek al
             </button>
           </div>
         </div>

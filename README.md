@@ -139,6 +139,10 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
   önizlenir ve aşılırsa gönderilmeden uyarılır. Taleplerin durumu adım adım
   izlenir (Gönderildi, İnceleniyor, Takibe eklendi).
 - **Planım**: Ücretsiz ve Premium planın karşılaştırması.
+- **Hesap ayarları**: profil adı, şifre değiştirme (Supabase Auth üzerinden,
+  mevcut şifre doğrulanır), Telegram bağlantısını kesme, ve "hesabı kaldır"
+  talebi gönderme (`customers.removal_requested_at`; admin talebi görüp
+  onaylarsa hesabı normal "sil" butonuyla çöp kutusuna atar).
 - **Alışveriş listesi** (yalnızca Premium): market ürünlerinden sepet oluşturma
   ve satıcı bazında toplam kıyaslama.
 - **Haftalık rapor** ve **Ürün kıyası** (yalnızca Premium): Ücretsiz müşteri
@@ -150,7 +154,7 @@ satıcılardaki fiyatını yan yana gösterir: yönetici, aynı ürünün her sa
 kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna**
 (`products.comparison_group`, örn. `coca-cola-1-5l`) koyar. Müşteri bir ürünü
 takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.
-"Destekle yaz" ve "Premium için yaz" düğmeleri şimdilik yalnızca görünümdür.
+"Destek al" ve "Premium için yaz" düğmeleri şimdilik yalnızca görünümdür.
 
 Alışveriş listesi tek bir sepetten ibaret değildir: müşteri **birden fazla
 sepet** oluşturabilir (`basket_lists` tablosu: `customer_id`, `name`,
@@ -372,6 +376,9 @@ Ek olarak:
   `match_id`).
 - `basket_matches`: müşterinin elle "eşdeğer" olarak birleştirdiği ürün
   grupları (`customer_id`, `name`).
+- `customers.removal_requested_at`: müşteri "Hesap ayarları"ndan hesap
+  kaldırma talebi gönderdiğinde dolar; admin talebi görüp uygun bulursa
+  hesabı normal silme akışıyla çöp kutusuna atar.
 - `price_daily` (görünüm): `price_history`'nin günlük son fiyat özeti (Türkiye
   saatine göre). `security_invoker` ile çalışır, yani sorgulayan kullanıcının
   RLS izinleri geçerlidir.
@@ -496,4 +503,5 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Panel: Ürünler sayfasında hangi ayrıştırıcının kullanıldığını gösteren "Yöntem" sütunu, liste/grup (karşılaştırma grubuna göre) görünüm anahtarı
 - [x] Panel: uzun listelerde sayfalama (Fiyat geçmişi: sunucu taraflı, sayfa başına 25/50/100/200; Ürünler, Müşteri talepleri, Bildirimler: tarayıcı taraflı, sayfa başına seçilebilir) ve Takipler'de müşteri başına akordiyon (5'ten fazla takibi olan müşteriler varsayılan kapalı başlar)
 - [x] Panel: Çöp kutusu (soft delete) — 9 tabloda silme artık geri yüklenebilir, kalıcı silme onay ister; bot ve giriş mantığı çöpe atılmış kayıtları görmezden gelecek şekilde güncellendi
+- [x] Müşteri portalı: Hesap ayarları sayfası (profil adı, şifre değiştirme, Telegram bağlantısını kesme, hesap kaldırma talebi)
 - [x] Panel: ürünlere karşılaştırma grubu alanı
