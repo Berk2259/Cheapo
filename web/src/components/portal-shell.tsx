@@ -37,6 +37,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/portal/plan", label: "Planım", icon: "crown" },
       { href: "/portal/account", label: "Hesap ayarları", icon: "settings" },
+      { href: "/portal/help", label: "Yardım & SSS", icon: "help" },
     ],
   },
 ];
@@ -49,6 +50,7 @@ const titles: Record<string, string> = {
   "/portal/notifications": "Bildirimlerim",
   "/portal/plan": "Planım",
   "/portal/account": "Hesap ayarları",
+  "/portal/help": "Yardım & SSS",
   "/portal/reports": "Haftalık rapor",
   "/portal/compare": "Ürün kıyası",
 };

@@ -147,6 +147,10 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
   mevcut şifre doğrulanır), Telegram bağlantısını kesme, ve "hesabı kaldır"
   talebi gönderme (`customers.removal_requested_at`; admin talebi görüp
   onaylarsa hesabı normal "sil" butonuyla çöp kutusuna atar).
+- **Yardım & SSS**: üstte üç hızlı rehber kartı (ilk ürünü takibe alma,
+  Telegram bağlama, ilk sepeti oluşturma; karta tıklayınca adımlar açılır),
+  altında kısa sorular (akordiyon). İçerik `components/portal-help.tsx`
+  içinde sabit metindir, veritabanına bağlı değildir.
 - **Alışveriş listesi** (yalnızca Premium): market ürünlerinden sepet oluşturma
   ve satıcı bazında toplam kıyaslama.
 - **Haftalık rapor** ve **Ürün kıyası** (yalnızca Premium): Ücretsiz müşteri
@@ -509,4 +513,5 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Panel: Çöp kutusu (soft delete) — 9 tabloda silme artık geri yüklenebilir, kalıcı silme onay ister; bot ve giriş mantığı çöpe atılmış kayıtları görmezden gelecek şekilde güncellendi
 - [x] Müşteri portalı: Hesap ayarları sayfası (profil adı, şifre değiştirme, Telegram bağlantısını kesme, hesap kaldırma talebi)
 - [x] Müşteri portalı: Favorilerim sayfası (takip edilen ürünlerden yıldızlananlar)
+- [x] Müşteri portalı: Yardım & SSS sayfası (rehber kartları + kısa SSS)
 - [x] Panel: ürünlere karşılaştırma grubu alanı
