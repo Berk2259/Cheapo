@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { STATUS_OPTIONS } from "@/components/lead-row";
 import {
   CustomerRequestRow,
@@ -19,6 +19,8 @@ export function CustomerRequestsList({
     requests.some((r) => r.status === "bekliyor") ? "bekliyor" : "all",
   );
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const chips: { value: Filter; label: string }[] = [
     { value: "all", label: "Tümü" },
@@ -33,6 +35,13 @@ export function CustomerRequestsList({
       .toLocaleLowerCase("tr")
       .includes(q);
   });
+
+  useEffect(() => {
+    setPage(1);
+  }, [q, filter, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+  const pageItems = visible.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="mt-6">
@@ -88,7 +97,7 @@ export function CustomerRequestsList({
       </div>
 
       <div className="grid gap-3">
-        {visible.map((request, i) => (
+        {pageItems.map((request, i) => (
           <div
             key={request.id}
             className="ad-in"
@@ -105,6 +114,49 @@ export function CustomerRequestsList({
           </div>
         )}
       </div>
+
+      {visible.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-500">
+          <div className="flex items-center gap-2">
+            <span>Sayfa başına</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-zinc-50 outline-none focus:border-emerald-500"
+            >
+              {[10, 25, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <span>
+              {(page - 1) * pageSize + 1}–{Math.min(visible.length, page * pageSize)} / {visible.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+            >
+              ‹
+            </button>
+            <span className="px-2 font-bold text-zinc-300">
+              {page} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

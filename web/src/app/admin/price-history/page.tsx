@@ -3,34 +3,47 @@ import { shortDateTime } from "@/lib/time";
 import { PriceChart } from "@/components/price-chart";
 import { PriceHistoryFilter } from "@/components/price-history-filter";
 import { PriceRecordRow } from "@/components/price-record-row";
+import { Pagination } from "@/components/pagination";
 
 export default async function PriceHistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ product?: string }>;
+  searchParams: Promise<{ product?: string; page?: string; pageSize?: string }>;
 }) {
-  const { product } = await searchParams;
+  const { product, page: pageParam, pageSize: pageSizeParam } = await searchParams;
   const productId = Number(product);
   const filtered = Number.isInteger(productId) && productId > 0;
+
+  const page = Math.max(1, Number(pageParam) || 1);
+  const pageSize = [25, 50, 100, 200].includes(Number(pageSizeParam))
+    ? Number(pageSizeParam)
+    : 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   const supabase = await createClient();
 
   let recordsQuery = supabase
     .from("price_history")
-    .select("id, product_id, price, currency, in_stock, checked_at");
+    .select("id, product_id, price, currency, in_stock, checked_at", {
+      count: "exact",
+    });
   if (filtered) {
     recordsQuery = recordsQuery.eq("product_id", productId);
   }
 
   const [records, products] = await Promise.all([
-    recordsQuery.order("checked_at", { ascending: false }).limit(100),
+    recordsQuery.order("checked_at", { ascending: false }).range(from, to),
     supabase.from("products").select("id, name").order("name"),
   ]);
 
   const productList = products.data ?? [];
   const rows = records.data ?? []; // yeniden eskiye
+  const total = records.count ?? 0;
 
-  // Her kaydın, aynı ürünün bir önceki kaydına göre değişimi (%).
+  // Her kaydın, aynı ürünün bir önceki kaydına göre değişimi (%). Sadece bu
+  // sayfadaki kayıtlar arasında hesaplanır; sayfanın en eski kaydı için bir
+  // önceki kayıt başka sayfadaysa değişim gösterilmez.
   const changes = new Map<number, number | null>();
   const previous = new Map<number, number>();
   for (let i = rows.length - 1; i >= 0; i--) {
@@ -64,7 +77,7 @@ export default async function PriceHistoryPage({
         Fiyat geçmişi
       </h1>
       <p className="mt-1 text-sm text-zinc-500">
-        Botun her kontrolde kaydettiği fiyatlar. En son 100 kayıt gösterilir.
+        Botun her kontrolde kaydettiği fiyatlar.
       </p>
 
       {(records.error || products.error) && (
@@ -76,9 +89,7 @@ export default async function PriceHistoryPage({
           products={productList}
           current={filtered ? String(productId) : ""}
         />
-        <span className="ml-auto text-sm text-zinc-500">
-          {items.length} kayıt
-        </span>
+        <span className="ml-auto text-sm text-zinc-500">{total} kayıt</span>
       </div>
 
       {selectedName && (
@@ -117,6 +128,14 @@ export default async function PriceHistoryPage({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        basePath="/admin/price-history"
+        extraParams={filtered ? { product: String(productId) } : {}}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+      />
     </div>
   );
 }

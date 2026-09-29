@@ -452,4 +452,5 @@ değildir, ilgili ürün admin panelden pasif yapılabilir.
 - [x] Premium: Alışveriş listesi (sektöre göre birden fazla sepet oluşturma/yeniden adlandırma/silme, satıcı bazında toplam kıyaslama, farklı markaları elle "eşdeğer" olarak eşleştirme)
 - [x] Bot: gerçek tarayıcı (Playwright) ile okuma, Cloudflare korumalı siteler için; JSON-LD, __NEXT_DATA__, data-testid, CSS class fiyat kutusu olmak üzere 4 ayrı ayrıştırıcıyı sırayla dener
 - [x] Panel: Ürünler sayfasında hangi ayrıştırıcının kullanıldığını gösteren "Yöntem" sütunu, liste/grup (karşılaştırma grubuna göre) görünüm anahtarı
+- [x] Panel: uzun listelerde sayfalama (Fiyat geçmişi: sunucu taraflı, sayfa başına 25/50/100/200; Ürünler, Müşteri talepleri, Bildirimler: tarayıcı taraflı, sayfa başına seçilebilir) ve Takipler'de müşteri başına akordiyon (5'ten fazla takibi olan müşteriler varsayılan kapalı başlar)
 - [x] Panel: ürünlere karşılaştırma grubu alanı

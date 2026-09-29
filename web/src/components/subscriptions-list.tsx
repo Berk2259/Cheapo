@@ -27,6 +27,8 @@ export type CustomerInfo = {
   active: boolean;
 };
 
+const COLLAPSE_THRESHOLD = 5;
+
 function money(value: number | null, currency: string) {
   if (value === null) return "-";
   return `${Number(value).toLocaleString("tr-TR", {
@@ -148,6 +150,17 @@ export function SubscriptionsList({
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<SubscriptionEdit | null>(null);
   const [adding, setAdding] = useState(false);
+  const [openIds, setOpenIds] = useState<Set<number>>(() => {
+    const counts = new Map<number, number>();
+    for (const it of items) {
+      counts.set(it.customerId, (counts.get(it.customerId) ?? 0) + 1);
+    }
+    const set = new Set<number>();
+    for (const c of customers) {
+      if ((counts.get(c.id) ?? 0) <= COLLAPSE_THRESHOLD) set.add(c.id);
+    }
+    return set;
+  });
 
   const canAdd = customers.length > 0 && productOptions.length > 0;
 
@@ -164,6 +177,15 @@ export function SubscriptionsList({
       items: visible.filter((i) => i.customerId === customer.id),
     }))
     .filter((g) => g.items.length > 0);
+
+  function toggle(id: number) {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   function closeDrawer() {
     setEditing(null);
@@ -214,57 +236,76 @@ export function SubscriptionsList({
       </div>
 
       <div className="grid gap-3.5">
-        {groups.map(({ customer, items: rows }, i) => (
-          <section
-            key={customer.id}
-            className="ad-in rounded-2xl border border-zinc-800 bg-zinc-900 p-[18px]"
-            style={{ "--i": Math.min(i, 8) } as React.CSSProperties}
-          >
-            <div className="mb-1 flex flex-wrap items-center gap-3">
-              <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-emerald-500/15 text-base font-extrabold text-emerald-400">
-                {(customer.name.trim()[0] ?? "?").toUpperCase()}
-              </span>
-              <div>
-                <b className="text-[15px] text-zinc-50">{customer.name}</b>
-                <p className="text-xs text-zinc-500">{rows.length} takip</p>
-              </div>
+        {groups.map(({ customer, items: rows }, i) => {
+          const isOpen = q ? true : openIds.has(customer.id);
+          return (
+            <section
+              key={customer.id}
+              className="ad-in rounded-2xl border border-zinc-800 bg-zinc-900 p-[18px]"
+              style={{ "--i": Math.min(i, 8) } as React.CSSProperties}
+            >
+              <button
+                type="button"
+                onClick={() => toggle(customer.id)}
+                className="-m-[18px] flex w-[calc(100%+36px)] flex-wrap items-center gap-3 rounded-2xl p-[18px] text-left transition hover:bg-white/[0.03]"
+              >
+                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-emerald-500/15 text-base font-extrabold text-emerald-400">
+                  {(customer.name.trim()[0] ?? "?").toUpperCase()}
+                </span>
+                <div>
+                  <b className="text-[15px] text-zinc-50">{customer.name}</b>
+                  <p className="text-xs text-zinc-500">{rows.length} takip</p>
+                </div>
 
-              {!customer.active ? (
-                <span className="ml-auto rounded-full bg-zinc-700/40 px-2.5 py-0.5 text-xs font-bold text-zinc-400">
-                  Pasif müşteri, bildirim gitmez
-                </span>
-              ) : customer.bound ? (
-                <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-bold text-emerald-400">
-                  <AdminIcon name="send" size={12} />
-                  Telegram bağlı
-                </span>
-              ) : (
-                <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-bold text-red-400">
-                  <AdminIcon name="alert" size={12} />
-                  Telegram bağlı değil, bildirim gitmez
-                </span>
-              )}
-            </div>
+                {!customer.active ? (
+                  <span className="ml-auto rounded-full bg-zinc-700/40 px-2.5 py-0.5 text-xs font-bold text-zinc-400">
+                    Pasif müşteri, bildirim gitmez
+                  </span>
+                ) : customer.bound ? (
+                  <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-bold text-emerald-400">
+                    <AdminIcon name="send" size={12} />
+                    Telegram bağlı
+                  </span>
+                ) : (
+                  <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-bold text-red-400">
+                    <AdminIcon name="alert" size={12} />
+                    Telegram bağlı değil, bildirim gitmez
+                  </span>
+                )}
 
-            <div>
-              {rows.map((item) => (
-                <SubRow
-                  key={item.id}
-                  item={item}
-                  onEdit={(it) =>
-                    setEditing({
-                      id: it.id,
-                      customerName: it.customerName,
-                      productName: it.productName,
-                      targetPrice: it.targetPrice,
-                      notifyAny: it.notifyAny,
-                    })
+                <span
+                  className={
+                    "grid h-8 w-8 flex-none place-items-center rounded-lg bg-zinc-800/60 text-zinc-400 transition-transform " +
+                    (isOpen ? "rotate-90" : "")
                   }
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+                >
+                  <AdminIcon name="arrow" size={15} />
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="mt-1">
+                  {rows.map((item) => (
+                    <SubRow
+                      key={item.id}
+                      item={item}
+                      onEdit={(it) =>
+                        setEditing({
+                          id: it.id,
+                          customerName: it.customerName,
+                          productName: it.productName,
+                          targetPrice: it.targetPrice,
+                          notifyAny: it.notifyAny,
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+
+            </section>
+          );
+        })}
 
         {groups.length === 0 && (
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-10 text-center text-zinc-500">
