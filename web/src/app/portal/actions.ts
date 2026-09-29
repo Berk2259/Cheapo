@@ -101,3 +101,32 @@ export async function submitCustomerRequest(input: {
   revalidatePath("/portal/requests");
   return { ok: true };
 }
+export async function toggleFavorite(
+  subscriptionId: number,
+  favorite: boolean,
+): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("auth_user_id", user?.id ?? "")
+    .maybeSingle();
+
+  if (!customer) return { ok: false, message: "Müşteri kaydı bulunamadı." };
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ is_favorite: favorite })
+    .eq("id", subscriptionId)
+    .eq("customer_id", customer.id);
+
+  if (error) return { ok: false, message: "Kaydedilemedi." };
+
+  revalidatePath("/portal");
+  revalidatePath("/portal/favorites");
+  return { ok: true };
+}

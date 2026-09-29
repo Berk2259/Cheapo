@@ -1,8 +1,13 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import { AdminIcon } from "@/components/admin-icons";
 import { PriceAreaChart } from "@/components/price-area-chart";
+import { toggleFavorite } from "@/app/portal/actions";
 
 export type PortalProduct = {
   id: number;
+  subscriptionId: number;
   name: string;
   category: string;
   url: string;
@@ -11,6 +16,7 @@ export type PortalProduct = {
   lastChecked: string;
   targetPrice: number | null;
   notifyAny: boolean;
+  isFavorite: boolean;
   series: number[];
 };
 
@@ -27,6 +33,17 @@ function pct(value: number) {
 
 export function PortalProductCard({ item }: { item: PortalProduct }) {
   const { series } = item;
+  const [favorite, setFavorite] = useState(item.isFavorite);
+  const [, startTransition] = useTransition();
+
+  function toggleStar() {
+    const next = !favorite;
+    setFavorite(next);
+    startTransition(async () => {
+      const result = await toggleFavorite(item.subscriptionId, next);
+      if (!result.ok) setFavorite(!next);
+    });
+  }
 
   // Son 7 kayıttaki değişim (%).
   let change: number | null = null;
@@ -51,11 +68,26 @@ export function PortalProductCard({ item }: { item: PortalProduct }) {
   return (
     <div
       className={
-        "rounded-[20px] border bg-zinc-900 p-[18px] transition hover:-translate-y-1 hover:border-emerald-500 hover:shadow-[0_18px_38px_-20px_rgba(45,212,191,0.6)] " +
+        "relative rounded-[20px] border bg-zinc-900 p-[18px] transition hover:-translate-y-1 hover:border-emerald-500 hover:shadow-[0_18px_38px_-20px_rgba(45,212,191,0.6)] " +
         (below ? "border-green-400/50" : "border-zinc-800")
       }
     >
-      <div className="flex items-start gap-2.5">
+      <button
+        type="button"
+        onClick={toggleStar}
+        aria-label={favorite ? "Favoriden çıkar" : "Favoriye ekle"}
+        title={favorite ? "Favoriden çıkar" : "Favoriye ekle"}
+        className={
+          "absolute right-[18px] top-[18px] grid h-8 w-8 place-items-center rounded-[9px] transition " +
+          (favorite
+            ? "bg-amber-400/15 text-amber-300"
+            : "bg-white/5 text-zinc-500 hover:text-amber-300")
+        }
+      >
+        <AdminIcon name="star" size={15} />
+      </button>
+
+      <div className="flex items-start gap-2.5 pr-9">
         <a
           href={item.url}
           target="_blank"

@@ -25,6 +25,7 @@ type Subscription = {
   id: number;
   target_price: number | null;
   notify_on_any_change: boolean;
+  is_favorite: boolean;
   products: Product | Product[] | null;
 };
 
@@ -45,7 +46,7 @@ export default async function PortalPage() {
   const { data, error } = await supabase
     .from("subscriptions")
     .select(
-      "id, target_price, notify_on_any_change, products(id, name, url, current_price, currency, last_checked_at, category_id, categories(name))",
+      "id, target_price, notify_on_any_change, is_favorite, products(id, name, url, current_price, currency, last_checked_at, category_id, categories(name))",
     )
     .eq("customer_id", customer.id);
 
@@ -79,6 +80,7 @@ export default async function PortalPage() {
 
   const items: PortalProduct[] = subs.map(({ sub, product }) => ({
     id: product.id,
+    subscriptionId: sub.id,
     name: product.name,
     category: Array.isArray(product.categories)
       ? (product.categories[0]?.name ?? "")
@@ -90,6 +92,7 @@ export default async function PortalPage() {
     lastChecked: timeAgo(product.last_checked_at),
     targetPrice: sub.target_price !== null ? Number(sub.target_price) : null,
     notifyAny: sub.notify_on_any_change,
+    isFavorite: sub.is_favorite,
     series: [...(seriesMap.get(product.id) ?? [])].reverse(),
   }));
 

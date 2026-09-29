@@ -132,8 +132,12 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
 
 - **Ürünlerim**: özet kutuları, hedefinin altına inen ürün için fırsat bandı,
   ürün kartları (fiyat grafiği, en düşük/en yüksek fiyat, değişim yüzdesi,
-  hedefe yakınlık), arama, sıralama ve kart/liste görünümü. Sağ kolonda plan
-  kartı, Telegram durumu ve son 3 bildirim.
+  hedefe yakınlık, favori yıldızı), arama, sıralama ve kart/liste görünümü.
+  Sağ kolonda plan kartı, Telegram durumu ve son 3 bildirim.
+- **Favorilerim**: "Ürünlerim"deki bir kartın yıldızına basılan ürünler
+  burada toplanır (`subscriptions.is_favorite`). Ayrı, hafif bir takip
+  katmanı değildir; sadece zaten takip edilen ürünler arasında hızlı erişim
+  sağlar, bildirim ayarını etkilemez.
 - **Bildirimlerim**: Telegram'dan gelen bildirimlerin günlere göre kaydı.
 - **Talep gönder**: kategori ve ürün seçerek talep. Plan sınırı seçim sırasında
   önizlenir ve aşılırsa gönderilmeden uyarılır. Taleplerin durumu adım adım
@@ -504,4 +508,5 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Panel: uzun listelerde sayfalama (Fiyat geçmişi: sunucu taraflı, sayfa başına 25/50/100/200; Ürünler, Müşteri talepleri, Bildirimler: tarayıcı taraflı, sayfa başına seçilebilir) ve Takipler'de müşteri başına akordiyon (5'ten fazla takibi olan müşteriler varsayılan kapalı başlar)
 - [x] Panel: Çöp kutusu (soft delete) — 9 tabloda silme artık geri yüklenebilir, kalıcı silme onay ister; bot ve giriş mantığı çöpe atılmış kayıtları görmezden gelecek şekilde güncellendi
 - [x] Müşteri portalı: Hesap ayarları sayfası (profil adı, şifre değiştirme, Telegram bağlantısını kesme, hesap kaldırma talebi)
+- [x] Müşteri portalı: Favorilerim sayfası (takip edilen ürünlerden yıldızlananlar)
 - [x] Panel: ürünlere karşılaştırma grubu alanı
