@@ -374,16 +374,10 @@ Ek olarak:
 
 ## Fiyat çekme yaklaşımı
 
-Her kaynak için ayrı "adapter" yazılır. Yöntem önceliği:
-1. Resmi API
-2. Sayfadaki JSON-LD verisi
-3. Sitenin iç JSON endpoint'i
-4. Playwright (gerçek tarayıcı)
-5. Ücretli scraping servisi (son çare)
-
-Hangi ürünün hangi yöntemle okunacağı, ürünün **kaynağının** yöntemine göre
-belirlenir (`sources.method`, panelde Kaynaklar sayfası). Şu an iki yöntem
-çalışır durumdadır:
+Her kaynağın bir okuma **yöntemi** vardır (`sources.method`, panelde Kaynaklar
+sayfası). Şu an iki yöntem gerçekten çalışır durumdadır; dropdown'da başka
+seçenek yoktur (ileride resmi API sunan bir kaynak eklenirse yeni bir yöntem
+olarak eklenir):
 
 - **JSON-LD (sayfa verisi)**: düz HTTP isteği ile sayfadaki JSON-LD fiyat verisi okunur. Hızlıdır.
 - **Tarayıcı (Playwright)**: headless Chromium ile sayfa açılır (`bot/adapters/browser.py`).
@@ -400,9 +394,12 @@ belirlenir (`sources.method`, panelde Kaynaklar sayfası). Şu an iki yöntem
 
   Her sayfa birkaç saniye sürer. Kontrolcü tarayıcıyı yalnızca bu yöntemdeki
   ürünler için başlatır. Hangi alt yöntemin tuttuğu ürünün `last_status`
-  alanına yazılır (`"ok · next_data"` gibi) ve admin panelde Ürünler
-  sayfasındaki **Yöntem** sütununda görünür; bu sütun boşsa ürün doğrudan
-  JSON-LD/HTTP ile okunmuş demektir.
+  alanına yazılır (`"ok · next_data"` gibi) ve panelde iki yerde görünür:
+  admin Ürünler sayfasındaki **Yöntem** sütununda (ürün bazında, boşsa
+  JSON-LD ile okunmuş demektir) ve Kaynaklar sayfasındaki kart üzerinde
+  renkli bir rozet olarak (o kaynağın ürünlerinden en az biri hangi alt
+  yöntemle okunduysa). Aynı kaynağın farklı ürünleri, sayfa şablonları
+  farklıysa, birden fazla alt yöntemle okunabilir — bu bir hata değildir.
 
 Yeni bir kaynak eklerken önce düz HTTP ile (JSON-LD) denenmelidir; site 403
 veriyorsa kaynağın yöntemi "Tarayıcı (Playwright)" yapılır — bu durumda dört

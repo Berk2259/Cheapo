@@ -5,6 +5,17 @@ import { AdminIcon } from "@/components/admin-icons";
 import { deleteSource, updateSource } from "@/app/admin/sources/actions";
 import { SOURCE_METHODS, methodLabel } from "@/lib/source-methods";
 
+const SUB_METHODS: Record<
+  string,
+  { label: string; icon: Parameters<typeof AdminIcon>[0]["name"]; cls: string }
+> = {
+  json_ld: { label: "JSON-LD", icon: "tag", cls: "bg-emerald-500/12 text-emerald-400" },
+  next_data: { label: "Sayfa verisi", icon: "grid", cls: "bg-blue-400/12 text-blue-300" },
+  data_testid: { label: "HTML etiketi", icon: "target", cls: "bg-purple-400/12 text-purple-300" },
+  price_class: { label: "CSS sınıfı", icon: "spark", cls: "bg-amber-400/12 text-amber-300" },
+};
+
+
 export type SourceItem = {
   id: number;
   name: string;
@@ -12,6 +23,7 @@ export type SourceItem = {
   base_url: string | null;
   is_active: boolean;
   productCount: number;
+  methods: string[];
 };
 
 const fieldClass =
@@ -241,6 +253,19 @@ export function SourceRow({ source }: { source: SourceItem }) {
           <AdminIcon name="package" size={13} />
           {source.productCount} ürün
         </span>
+        {source.methods.map((m) => {
+          const info = SUB_METHODS[m] ?? { label: m, icon: "tag" as const, cls: "bg-white/5 text-zinc-400" };
+          return (
+            <span
+              key={m}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${info.cls}`}
+              title="Fiyat bu yöntemle okunuyor"
+            >
+              <AdminIcon name={info.icon} size={12} stroke={2.6} />
+              {info.label}
+            </span>
+          );
+        })}
       </div>
 
       {message && <p className="mt-3 text-xs text-red-500">{message}</p>}

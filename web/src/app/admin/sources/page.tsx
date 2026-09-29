@@ -10,13 +10,25 @@ export default async function SourcesPage() {
       .from("sources")
       .select("id, name, method, base_url, is_active")
       .order("id"),
-    supabase.from("products").select("source_id"),
+    supabase.from("products").select("source_id, last_status"),
   ]);
+
+  function methodsFor(sourceId: number): string[] {
+    const set = new Set<string>();
+    for (const p of products.data ?? []) {
+      if (p.source_id !== sourceId) continue;
+      const status = p.last_status ?? "";
+      const [, method] = status.split("·").map((s: string) => s.trim());
+      if (status.startsWith("ok") && method) set.add(method);
+    }
+    return [...set];
+  }
 
   const items = (sources.data ?? []).map((s) => ({
     ...s,
     productCount: (products.data ?? []).filter((p) => p.source_id === s.id)
       .length,
+    methods: methodsFor(s.id),
   }));
 
   return (
