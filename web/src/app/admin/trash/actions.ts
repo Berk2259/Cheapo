@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type Result = { ok: boolean; message?: string };
 
-export const TRASH_TABLES = [
+const TRASH_TABLES = [
   "products",
   "sources",
   "categories",
