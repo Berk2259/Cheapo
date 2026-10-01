@@ -156,26 +156,24 @@ export function LeadRow({ lead }: { lead: Lead }) {
               Hesap açıldı
             </span>
           ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setCreatingAccount(!creatingAccount)}
-                className="rounded-[10px] bg-emerald-500 px-3.5 py-2 text-xs font-bold text-[#052e2b] transition hover:-translate-y-0.5"
-              >
-                Hesap aç
-              </button>
-              <button
-                type="button"
-                onClick={remove}
-                disabled={pending}
-                title="Sil"
-                aria-label="Sil"
-                className={`${iconButton} hover:border-red-500 hover:text-red-400`}
-              >
-                <AdminIcon name="trash" size={16} />
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setCreatingAccount(!creatingAccount)}
+              className="rounded-[10px] bg-emerald-500 px-3.5 py-2 text-xs font-bold text-[#052e2b] transition hover:-translate-y-0.5"
+            >
+              Hesap aç
+            </button>
           )}
+          <button
+            type="button"
+            onClick={remove}
+            disabled={pending}
+            title="Sil"
+            aria-label="Sil"
+            className={`${iconButton} hover:border-red-500 hover:text-red-400`}
+          >
+            <AdminIcon name="trash" size={16} />
+          </button>
         </div>
       </div>
 
