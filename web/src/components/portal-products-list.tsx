@@ -31,7 +31,7 @@ function ListRow({ item }: { item: PortalProduct }) {
       <div className="min-w-0">
         <b className="block font-extrabold">{item.name}</b>
         <small className="text-zinc-500">
-          {item.category && `${item.category} · `}
+          {item.source && `${item.source} · `}
           {item.lastChecked}
         </small>
       </div>

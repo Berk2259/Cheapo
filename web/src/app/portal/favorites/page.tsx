@@ -12,8 +12,8 @@ type Product = {
   last_checked_at: string | null;
   category_id: number;
   categories: { name: string } | { name: string }[] | null;
+  sources: { name: string } | { name: string }[] | null;
 };
-
 type Subscription = {
   id: number;
   target_price: number | null;
@@ -39,7 +39,7 @@ export default async function FavoritesPage() {
   const { data } = await supabase
     .from("subscriptions")
     .select(
-      "id, target_price, notify_on_any_change, is_favorite, products(id, name, url, current_price, currency, last_checked_at, category_id, categories(name))",
+      "id, target_price, notify_on_any_change, is_favorite, products(id, name, url, current_price, currency, last_checked_at, category_id, categories(name), sources(name))",
     )
     .eq("customer_id", customer.id)
     .eq("is_favorite", true);
@@ -78,6 +78,9 @@ export default async function FavoritesPage() {
     category: Array.isArray(product.categories)
       ? (product.categories[0]?.name ?? "")
       : (product.categories?.name ?? ""),
+    source: Array.isArray(product.sources)
+      ? (product.sources[0]?.name ?? "")
+      : (product.sources?.name ?? ""),
     url: product.url,
     currentPrice:
       product.current_price !== null ? Number(product.current_price) : null,

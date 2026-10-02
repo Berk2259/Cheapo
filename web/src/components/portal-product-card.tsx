@@ -10,6 +10,7 @@ export type PortalProduct = {
   subscriptionId: number;
   name: string;
   category: string;
+  source: string;
   url: string;
   currentPrice: number | null;
   currency: string;
@@ -87,20 +88,24 @@ export function PortalProductCard({ item }: { item: PortalProduct }) {
         <AdminIcon name="star" size={15} />
       </button>
 
-      <div className="flex items-start gap-2.5 pr-9">
+      <div className="pr-9">
+        {(item.category || item.source) && (
+          <p className="mb-1 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide">
+            {item.category && <span className="text-emerald-400">{item.category}</span>}
+            {item.category && item.source && (
+              <span className="text-zinc-700">/</span>
+            )}
+            {item.source && <span className="text-zinc-400">{item.source}</span>}
+          </p>
+        )}
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 font-extrabold leading-snug text-zinc-50 transition hover:text-emerald-400"
+          className="font-extrabold leading-snug text-zinc-50 transition hover:text-emerald-400"
         >
           {item.name}
         </a>
-        {item.category && (
-          <span className="whitespace-nowrap rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-extrabold text-emerald-300">
-            {item.category}
-          </span>
-        )}
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-3">
