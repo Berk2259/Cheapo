@@ -273,6 +273,21 @@ içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
 
 Tüm admin sayfaları yenilenmiştir.
 
+## Canlıya alma
+
+Web paneli **Vercel**'e deploy edilir (repo mono-repo olduğu için Root Directory
+`web` seçilmelidir). Gerekli ortam değişkenleri `web/.env.local` ile aynıdır:
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+`TELEGRAM_BOT_USERNAME`, `SUPABASE_SERVICE_ROLE_KEY`. `master`'a her push
+otomatik yeni bir production deploy tetikler.
+
+Bot (`bot/main.py`) sürekli çalışan bir süreçtir (Telegram dinleme + 60
+saniyede bir fiyat kontrolü), bu yüzden Vercel gibi serverless platformlarda
+çalışamaz. Sürekli ayakta kalan bir süreç çalıştırabilen ayrı bir yerde
+(örn. Railway, bir VPS) host edilmesi gerekir; Root Directory `bot`, Start
+Command `python main.py` olmalıdır.
+
+
 ## Kurulum
 
 ### Ön koşullar
@@ -515,3 +530,5 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Müşteri portalı: Favorilerim sayfası (takip edilen ürünlerden yıldızlananlar)
 - [x] Müşteri portalı: Yardım & SSS sayfası (rehber kartları + kısa SSS)
 - [x] Panel: ürünlere karşılaştırma grubu alanı
+- [x] Panel: Vercel'e deploy edildi (Root Directory `web`, gerekli ortam değişkenleri tanımlandı)
+- [x] Panel: Talepler sayfasında hesabı zaten açılmış talepler için de silme butonu görünür hale getirildi (önceden sadece hesap açılmamış taleplerde vardı)
