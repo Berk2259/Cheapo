@@ -107,6 +107,7 @@ export function PortalProductCard({ item }: { item: PortalProduct }) {
           {item.name}
         </a>
       </div>
+      
 
       <div className="mt-2.5 flex items-end justify-between gap-3">
         <div>

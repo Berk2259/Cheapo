@@ -82,6 +82,8 @@ export function PortalReport({
 }) {
   const [period, setPeriod] = useState<7 | 30>(7);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const usable = products.filter((p) => p.series.length >= 2);
 
@@ -108,6 +110,12 @@ export function PortalReport({
   const maxAbs = Math.max(...rows.map((r) => Math.abs(r.c)), 1);
   const best = rows[0];
   const worst = rows[rows.length - 1];
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+  const pageRows = rows.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage,
+  );
 
   const withTarget = usable.filter((p) => p.target !== null);
   const below = withTarget.filter((p) => current(p) <= (p.target as number));
@@ -273,17 +281,34 @@ export function PortalReport({
       <div className="mt-[18px] grid items-start gap-[18px] lg:grid-cols-[1.5fr_1fr]">
         {/* Fiyat değişimi çubukları */}
         <div className="rounded-[20px] border border-zinc-800 bg-zinc-900 p-[18px]">
-          <h3 className="mb-3 flex items-center gap-2 text-base font-bold">
+          <h3 className="mb-3 flex flex-wrap items-center gap-2 text-base font-bold">
             <AdminIcon name="trend" size={17} /> Fiyat değişimi
-            <small className="ml-auto hidden text-[12.5px] font-semibold text-zinc-500 sm:block">
+            <small className="hidden text-[12.5px] font-semibold text-zinc-500 sm:block">
               yeşil ucuzladı, kırmızı pahalandı
             </small>
+            <span className="ml-auto flex items-center gap-1.5 text-[12px] font-semibold text-zinc-500">
+              Sayfa başına
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-[12.5px] text-zinc-50 outline-none focus:border-emerald-500"
+              >
+                {[5, 10, 25, 50].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </span>
           </h3>
           <div className="flex justify-between px-1.5 pb-1.5 text-[11.5px] text-zinc-500 sm:pl-[182px]">
             <span>← ucuzladı</span>
             <span>pahalandı →</span>
           </div>
-          {rows.map(({ p, c }) => {
+          {pageRows.map(({ p, c }) => {
             const flat = Math.abs(c) < 0.05;
             const width = (Math.abs(c) / maxAbs) * 50;
             return (
@@ -332,6 +357,36 @@ export function PortalReport({
               </button>
             );
           })}
+
+          {totalPages > 1 && (
+            <div className="mt-2 flex items-center justify-between border-t border-zinc-800 pt-3 text-[12.5px] text-zinc-500">
+              <span>
+                {(page - 1) * rowsPerPage + 1}–
+                {Math.min(page * rowsPerPage, rows.length)} / {rows.length} ürün
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                >
+                  ‹
+                </button>
+                <span className="px-1 font-bold text-zinc-300">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sağ: bildirimler ve öne çıkanlar */}
