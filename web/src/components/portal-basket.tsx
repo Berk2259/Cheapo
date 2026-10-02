@@ -283,7 +283,7 @@ export function PortalBasket({
       </div>
 
       {/* Sepet seçici şerit */}
-      <div className="ad-in relative z-20 mt-4 flex flex-wrap items-center gap-2">
+      <div className="ad-in relative z-20 mt-4 flex flex-wrap items-stretch gap-2">
         {lists.map((l) => (
           <div key={l.id} className="relative">
             <button
@@ -340,7 +340,7 @@ export function PortalBasket({
         <button
           type="button"
           onClick={openNewListModal}
-          className="flex items-center gap-1.5 rounded-2xl border border-dashed border-zinc-700 px-4 py-2.5 text-[13px] font-extrabold text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-300"
+          className="flex items-center gap-1.5 rounded-2xl border border-dashed border-zinc-700 px-4 text-[13px] font-extrabold text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-300"
         >
           <AdminIcon name="plus" size={15} stroke={2.6} /> Yeni sepet
         </button>

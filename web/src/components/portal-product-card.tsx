@@ -108,7 +108,6 @@ export function PortalProductCard({ item }: { item: PortalProduct }) {
         </a>
       </div>
       
-
       <div className="mt-2.5 flex items-end justify-between gap-3">
         <div>
           <p className="text-[28px] font-extrabold leading-[1.1] tracking-[-0.03em]">
