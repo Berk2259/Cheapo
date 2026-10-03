@@ -14,6 +14,7 @@ type Product = {
   category_id: number;
   current_price: number | null;
   currency: string;
+  source: string;
 };
 
 type Confetti = { color: string; x: number; y: number; r: number; delay: number };
@@ -81,6 +82,9 @@ export function CustomerRequestForm({
 }) {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? 0);
   const [productIds, setProductIds] = useState<number[]>([]);
+  const [settings, setSettings] = useState<
+    Record<number, { notify: boolean; target: string }>
+  >({});
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -122,19 +126,42 @@ export function CustomerRequestForm({
     setProductIds((current) =>
       current.includes(id) ? current.filter((p) => p !== id) : [...current, id],
     );
+    setSettings((current) => {
+      if (current[id]) return current;
+      return { ...current, [id]: { notify: true, target: "" } };
+    });
+  }
+
+  function setNotify(id: number, notify: boolean) {
+    setSettings((current) => ({
+      ...current,
+      [id]: { notify, target: current[id]?.target ?? "" },
+    }));
+  }
+
+  function setTarget(id: number, target: string) {
+    setSettings((current) => ({
+      ...current,
+      [id]: { notify: current[id]?.notify ?? true, target },
+    }));
   }
 
   function submit() {
     startTransition(async () => {
       const result = await submitCustomerRequest({
         categoryId,
-        productIds: newSelected,
+        products: newSelected.map((id) => ({
+          productId: id,
+          targetPrice: settings[id]?.target ?? "",
+          notifyOnAnyChange: settings[id]?.notify ?? true,
+        })),
         note,
       });
       if (result.ok) {
         setConfetti(makeConfetti());
         setSent(true);
         setProductIds([]);
+        setSettings({});
         setNote("");
         setMessage(null);
       } else {
@@ -268,42 +295,79 @@ export function CustomerRequestForm({
           {filteredProducts.map((p) => {
             const followed = followedProducts.has(p.id);
             const on = productIds.includes(p.id);
+            const s = settings[p.id] ?? { notify: true, target: "" };
             return (
-              <button
+              <div
                 key={p.id}
-                type="button"
-                disabled={followed}
-                onClick={() => toggleProduct(p.id)}
                 className={
-                  "flex w-full items-center gap-3.5 rounded-2xl border-2 px-3.5 py-3 text-left transition disabled:opacity-50 " +
+                  "rounded-2xl border-2 transition " +
                   (on
                     ? "border-emerald-500 bg-emerald-500/10"
-                    : "border-zinc-800 bg-zinc-900 hover:border-emerald-500")
+                    : "border-zinc-800 bg-zinc-900")
                 }
               >
-                <span
-                  className={
-                    "grid h-6 w-6 flex-none place-items-center rounded-lg border-2 transition " +
-                    (on
-                      ? "scale-110 border-emerald-500 bg-emerald-500 text-[#052e2b]"
-                      : "border-zinc-700 text-transparent")
-                  }
+                <button
+                  type="button"
+                  disabled={followed}
+                  onClick={() => toggleProduct(p.id)}
+                  className="flex w-full items-center gap-3.5 px-3.5 py-3 text-left transition disabled:opacity-50"
                 >
-                  <AdminIcon name="check" size={14} stroke={3.4} />
-                </span>
-                <span className="flex-1 font-bold">{p.name}</span>
-                {followed ? (
-                  <span className="rounded-full bg-green-400/15 px-2.5 py-0.5 text-xs font-extrabold text-green-400">
-                    Zaten takipte
+                  <span
+                    className={
+                      "grid h-6 w-6 flex-none place-items-center rounded-lg border-2 transition " +
+                      (on
+                        ? "scale-110 border-emerald-500 bg-emerald-500 text-[#052e2b]"
+                        : "border-zinc-700 text-transparent")
+                    }
+                  >
+                    <AdminIcon name="check" size={14} stroke={3.4} />
                   </span>
-                ) : (
-                  p.current_price !== null && (
-                    <span className="font-extrabold tabular-nums">
-                      {money(Number(p.current_price), p.currency)}
+                  <span className="flex-1 font-bold">
+                    {p.name}
+                    {p.source && (
+                      <small className="ml-1.5 font-semibold text-zinc-500">
+                        · {p.source}
+                      </small>
+                    )}
+                  </span>
+                  {followed ? (
+                    <span className="rounded-full bg-green-400/15 px-2.5 py-0.5 text-xs font-extrabold text-green-400">
+                      Zaten takipte
                     </span>
-                  )
+                  ) : (
+                    p.current_price !== null && (
+                      <span className="font-extrabold tabular-nums">
+                        {money(Number(p.current_price), p.currency)}
+                      </span>
+                    )
+                  )}
+                </button>
+
+                {on && !followed && (
+                  <div className="flex flex-wrap items-center gap-3.5 border-t border-emerald-500/20 px-3.5 py-3">
+                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={s.notify}
+                        onChange={(e) => setNotify(p.id, e.target.checked)}
+                        className="h-4 w-4 accent-emerald-500"
+                      />
+                      Her değişimde bildir
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                      Hedef fiyat
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={s.target}
+                        onChange={(e) => setTarget(p.id, e.target.value)}
+                        placeholder="opsiyonel"
+                        className="w-28 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-50 outline-none focus:border-emerald-500"
+                      />
+                    </label>
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -333,6 +397,7 @@ export function CustomerRequestForm({
         Not{" "}
         <small className="font-medium text-zinc-500">(isteğe bağlı)</small>
       </Step>
+
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}

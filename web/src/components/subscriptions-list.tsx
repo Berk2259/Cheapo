@@ -14,6 +14,7 @@ export type SubItem = {
   customerId: number;
   customerName: string;
   productName: string;
+  sourceName: string;
   currentPrice: number | null;
   currency: string;
   targetPrice: number | null;
@@ -89,6 +90,11 @@ function SubRow({
       <div className="min-w-0 flex-1 basis-56">
         <p className="truncate text-sm font-bold text-zinc-50">
           {item.productName}
+          {item.sourceName && (
+            <span className="ml-1.5 rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] font-bold text-zinc-400">
+              {item.sourceName}
+            </span>
+          )}
         </p>
         <p className="text-xs text-zinc-500">
           Güncel: {money(item.currentPrice, item.currency)}

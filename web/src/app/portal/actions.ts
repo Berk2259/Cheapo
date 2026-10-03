@@ -6,16 +6,54 @@ import { PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
 
 type Result = { ok: boolean; message?: string };
 
+type RequestProductInput = {
+  productId: number;
+  targetPrice: string;
+  notifyOnAnyChange: boolean;
+};
+
+function parseRequestTarget(raw: string): { value: number | null; error?: string } {
+  const text = raw.trim().replace(",", ".");
+  if (text === "") return { value: null };
+  const value = Number(text);
+  if (!Number.isFinite(value) || value <= 0) {
+    return { value: null, error: "Hedef fiyat pozitif bir sayı olmalı." };
+  }
+  return { value };
+}
+
 export async function submitCustomerRequest(input: {
   categoryId: number;
-  productIds: number[];
+  products: RequestProductInput[];
   note: string;
 }): Promise<Result> {
   if (!Number.isInteger(input.categoryId) || input.categoryId <= 0) {
     return { ok: false, message: "Kategori seç." };
   }
-  if (input.productIds.length === 0) {
+  if (input.products.length === 0) {
     return { ok: false, message: "En az bir ürün seç." };
+  }
+
+  const parsedProducts: {
+    product_id: number;
+    target_price: number | null;
+    notify_on_any_change: boolean;
+  }[] = [];
+  for (const p of input.products) {
+    const { value: target, error: targetError } = parseRequestTarget(p.targetPrice);
+    if (targetError) return { ok: false, message: targetError };
+    if (target === null && !p.notifyOnAnyChange) {
+      return {
+        ok: false,
+        message:
+          'Her ürün için hedef fiyat gir ya da "Her değişimde bildir"i seç, yoksa bildirim gitmez.',
+      };
+    }
+    parsedProducts.push({
+      product_id: p.productId,
+      target_price: target,
+      notify_on_any_change: p.notifyOnAnyChange,
+    });
   }
 
   const supabase = await createClient();
@@ -58,7 +96,8 @@ export async function submitCustomerRequest(input: {
       .filter((id): id is number => typeof id === "number"),
   );
 
-  const newProductIds = new Set([...existingProductIds, ...input.productIds]);
+  const productIds = parsedProducts.map((p) => p.product_id);
+  const newProductIds = new Set([...existingProductIds, ...productIds]);
   const newCategoryIds = new Set([...existingCategoryIds, input.categoryId]);
 
   if (
@@ -88,9 +127,9 @@ export async function submitCustomerRequest(input: {
   const { error: productsError } = await supabase
     .from("customer_request_products")
     .insert(
-      input.productIds.map((product_id) => ({
+      parsedProducts.map((p) => ({
         request_id: request.id,
-        product_id,
+        ...p,
       })),
     );
 

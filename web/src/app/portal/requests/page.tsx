@@ -42,7 +42,7 @@ export default async function CustomerRequestsPage() {
     supabase.from("categories").select("id, name").order("name"),
     supabase
       .from("products")
-      .select("id, name, category_id, current_price, currency")
+      .select("id, name, category_id, current_price, currency, sources(name)")
       .eq("is_active", true),
     customer
       ? supabase
@@ -61,7 +61,19 @@ export default async function CustomerRequestsPage() {
       : Promise.resolve({ data: [] as FollowedRow[] }),
   ]);
 
-  const productList = products.data ?? [];
+  function sourceName(value: { name: string } | { name: string }[] | null | undefined): string {
+    if (!value) return "";
+    return Array.isArray(value) ? (value[0]?.name ?? "") : value.name;
+  }
+
+  const productList = (products.data ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    category_id: p.category_id,
+    current_price: p.current_price,
+    currency: p.currency,
+    source: sourceName(p.sources),
+  }));
   const followedRows = (followed.data ?? []) as FollowedRow[];
 
   const followedProductIds = followedRows.map((f) => f.product_id);

@@ -65,15 +65,18 @@ async def notify_one(bot: Bot, product: dict, old_price: float, new_price: float
         if not should_notify(sub, old_price, new_price):
             continue
 
-        await bot.send_message(chat_id=customer["telegram_chat_id"], text=message)
-        supabase.table("notification_log").insert(
-            {
-                "customer_id": customer["id"],
-                "product_id": product["id"],
-                "message": message,
-            }
-        ).execute()
-        print(f"  Bildirim gönderildi: {customer['name']}")
+        try:
+            await bot.send_message(chat_id=customer["telegram_chat_id"], text=message)
+            supabase.table("notification_log").insert(
+                {
+                    "customer_id": customer["id"],
+                    "product_id": product["id"],
+                    "message": message,
+                }
+            ).execute()
+            print(f"  Bildirim gönderildi: {customer['name']}")
+        except Exception as e:
+            print(f"  [HATA] Bildirim gönderilemedi ({customer['name']}): {e}")
 
 
 async def send_notifications(changes: list) -> None:

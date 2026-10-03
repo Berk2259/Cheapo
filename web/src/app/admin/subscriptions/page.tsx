@@ -17,13 +17,18 @@ export default async function SubscriptionsPage() {
       .order("name"),
     supabase
       .from("products")
-      .select("id, name, current_price, currency")
+      .select("id, name, current_price, currency, sources(name)")
       .is("deleted_at", null)
       .order("name"),
   ]);
 
   const customerList = customers.data ?? [];
   const productList = products.data ?? [];
+
+  function sourceName(value: { name: string } | { name: string }[] | null | undefined): string {
+    if (!value) return "";
+    return Array.isArray(value) ? (value[0]?.name ?? "") : value.name;
+  }
 
   const items = (subscriptions.data ?? []).map((s) => {
     const customer = customerList.find((c) => c.id === s.customer_id);
@@ -33,6 +38,7 @@ export default async function SubscriptionsPage() {
       customerId: s.customer_id,
       customerName: customer?.name ?? "-",
       productName: product?.name ?? "-",
+      sourceName: sourceName(product?.sources),
       currentPrice:
         product?.current_price != null ? Number(product.current_price) : null,
       currency: product?.currency ?? "TRY",

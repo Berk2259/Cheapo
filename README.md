@@ -87,6 +87,10 @@ her müşteri için şu kurallara bakılır:
 Ürünün ilk kez okunduğunda (önceki fiyat yokken) bildirim gitmez. Gönderilen
 her bildirim `notification_log` tablosuna kaydedilir.
 
+Bir müşteriye bildirim gönderimi başarısız olursa (örn. geçersiz/erişilemeyen
+Telegram chat ID), bu hata sadece o müşteri için loglanır; aynı turdaki diğer
+müşterilere giden bildirimleri durdurmaz (`notifier.py`).
+
 ### Müşteri bağlama
 
 Her müşterinin panelde otomatik üretilen bir bağlama kodu vardır. Panelden
@@ -145,9 +149,13 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
   katmanı değildir; sadece zaten takip edilen ürünler arasında hızlı erişim
   sağlar, bildirim ayarını etkilemez.
 - **Bildirimlerim**: Telegram'dan gelen bildirimlerin günlere göre kaydı.
-- **Talep gönder**: kategori ve ürün seçerek talep. Plan sınırı seçim sırasında
-  önizlenir ve aşılırsa gönderilmeden uyarılır. Taleplerin durumu adım adım
-  izlenir (Gönderildi, İnceleniyor, Takibe eklendi).
+- **Talep gönder**: kategori ve ürün seçerek talep. Aynı isimli ürünleri farklı
+  marketlerde ayırt edebilmek için her ürünün yanında hangi marketten olduğu
+  görünür. Seçilen her ürün için müşteri kendi bildirim tercihini belirler
+  ("Her değişimde bildir" ve/veya hedef fiyat); en az biri seçilmeden talep
+  gönderilemez. Plan sınırı seçim sırasında önizlenir ve aşılırsa
+  gönderilmeden uyarılır. Taleplerin durumu adım adım izlenir (Gönderildi,
+  İnceleniyor, Takibe eklendi).
 - **Planım**: Ücretsiz ve Premium planın karşılaştırması.
 - **Hesap ayarları**: profil adı, şifre değiştirme (Supabase Auth üzerinden,
   mevcut şifre doğrulanır), Telegram bağlantısını kesme, ve "hesabı kaldır"
@@ -202,18 +210,27 @@ birlikte gösterilir; eşleştirme istendiği an geri alınabilir.
 Portalın veritabanı erişimi satır bazlı güvenlik (RLS) kurallarıyla sağlanır:
 müşteri sadece kendi `customers`, `subscriptions`, `customer_requests`,
 `notification_log` ve takip ettiği ürünlerin `price_history` satırlarını
-okuyabilir; ayrıca aktif ürünleri ve aktif kaynakları okuyabilir. Hiçbir tabloya
-yazma yetkisi yoktur (talep göndermek sunucu işleminden geçer).
+okuyabilir; ayrıca aktif ürünleri ve aktif kaynakları okuyabilir. Çoğu tabloya
+yazma yetkisi yoktur (talep göndermek sunucu işleminden geçer). Tek istisna
+`customers` tablosu: müşteri kendi satırında sadece `name`, `telegram_chat_id`
+ve `removal_requested_at` sütunlarını güncelleyebilir (RLS satır kuralı +
+sütun bazlı `grant`) — profil adı, Telegram bağlantısını kesme ve hesap
+kaldırma talebi bu sayede çalışır. `plan`, `deleted_at` gibi hassas alanlara
+müşteri elle yazamaz.
 
 ### Müşteri talebi ve otomatik takip
 
 Müşteri portaldan bir kategori ve o kategorideki ürünleri seçip talep
-gönderir (`customer_requests` + `customer_request_products`). Admin, panelin
+gönderir (`customer_requests` + `customer_request_products`); her ürün için
+kendi bildirim tercihini de (hedef fiyat ve/veya "her değişimde bildir")
+aynı anda belirler, bu tercihler `customer_request_products` tablosunda
+(`target_price`, `notify_on_any_change`) saklanır. Admin, panelin
 **Müşteri talepleri** sayfasından bu talepleri görür ve durumunu değiştirir
 (Bekliyor / İnceleniyor / Tamamlandı / Reddedildi). Durum **Tamamlandı**
-yapıldığında seçilen ürünler otomatik olarak müşterinin takiplerine
-(`subscriptions`) eklenir; hedef fiyat ve bildirim kuralı boş kalır, admin
-bunu Takipler sayfasından ayarlar.
+yapıldığında seçilen ürünler, müşterinin talep sırasında belirlediği hedef
+fiyat ve bildirim tercihiyle birlikte otomatik olarak müşterinin takiplerine
+(`subscriptions`) eklenir; admin'in ayrıca Takipler sayfasından ayarlamasına
+gerek kalmaz (isterse yine değiştirebilir).
 
 ### Plan sınırları
 
@@ -277,8 +294,9 @@ içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
 - **Kategoriler ve Kaynaklar**: kart görünümü; her kartta bağlı ürün (ve
   kategoride müşteri) sayısı. Bağlı ürünü olan kategori ya da kaynak silinemez.
 - **Takipler**: müşteriye göre gruplu kartlar; her müşteride Telegram durumu
-  (bağlı değilse bildirim gidemediği belirtilir), ürünün güncel fiyatı ve
-  hedefe uzaklığı. Ekleme ve düzenleme sağdan açılan çekmecede yapılır.
+  (bağlı değilse bildirim gidemediği belirtilir), ürünün hangi marketten
+  takip edildiği (etiket), güncel fiyatı ve hedefe uzaklığı. Ekleme ve
+  düzenleme sağdan açılan çekmecede yapılır.
 - **Müşteriler**: kart görünümü; plan (Ücretsiz/Premium) düzenleme çekmecesinden
   değiştirilebilir, bağlı olmayan müşterinin bağlama linki karttan kopyalanır.
   Kartta kategoriler, takip sayısı ve müşterinin bildirimlerine kısayol vardır.
@@ -548,3 +566,7 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Müşteri portalı: Haftalık rapor sayfasında ürünlerin hangi mağazadan takip edildiği gösteriliyor
 - [x] Müşteri portalı: "Destek al" ve "Premium için yaz" düğmeleri Gmail web compose linkine bağlandı (masaüstü mail uygulaması gerektirmeden çalışır)
 - [x] Planım sayfası ve landing page planlar bölümü: Premium özellik listesine eksik olan "Alışveriş listesi" eklendi
+- [x] Bot: bir müşteriye bildirim gönderimi başarısız olursa diğer müşterilerin bildirimini engellemiyor (notifier.py try/except)
+- [x] Müşteri portalı: hesap ayarlarında Telegram bağlantısını kesme/profil güncelleme için `customers` tablosuna sınırlı (sütun bazlı) kendi-satırını-güncelleme RLS izni eklendi
+- [x] Müşteri portalı: Talep gönder formunda her ürün için hedef fiyat / her değişimde bildir seçimi, onaylanınca otomatik takibe aktarılıyor
+- [x] Müşteri portalı ve admin panel: ürün listelerinde (Talep gönder, Takipler) hangi marketten olduğunu gösteren etiket eklendi

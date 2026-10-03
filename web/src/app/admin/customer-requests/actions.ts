@@ -36,7 +36,7 @@ export async function updateCustomerRequestStatus(
   if (status === "tamamlandi" && request) {
     const { data: items } = await supabase
       .from("customer_request_products")
-      .select("product_id")
+      .select("product_id, target_price, notify_on_any_change")
       .eq("request_id", id);
 
     if (items && items.length > 0) {
@@ -44,6 +44,8 @@ export async function updateCustomerRequestStatus(
         items.map((item) => ({
           customer_id: request.customer_id,
           product_id: item.product_id,
+          target_price: item.target_price,
+          notify_on_any_change: item.notify_on_any_change,
         })),
         { onConflict: "customer_id,product_id", ignoreDuplicates: true },
       );
