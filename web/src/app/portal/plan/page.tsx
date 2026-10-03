@@ -155,21 +155,24 @@ export default async function PlanPage() {
                         ))}
                     </ul>
 
-                    {/* Şimdilik sadece görünüm: iletişim kanalı belirlenince bağlanacak. */}
                     {premium ? (
-                        <button
-                            type="button"
+                        <a
+                            href="https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="rounded-xl border border-zinc-800 px-3.5 py-2 text-[13px] font-extrabold text-zinc-50"
                         >
                             Destek al
-                        </button>
+                        </a>
                     ) : (
-                        <button
-                            type="button"
+                        <a
+                            href="https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#fbbf24,#f59e0b)] px-4 py-2.5 font-extrabold text-[#3b2a00] shadow-[0_10px_24px_-10px_#f59e0b]"
                         >
                             <AdminIcon name="crown" size={16} /> Premium için yaz
-                        </button>
+                        </a>
                     )}
                 </div>
             </div>

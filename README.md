@@ -169,7 +169,12 @@ detayında kategorinin yanında hangi mağazadan takip edildiği de gösterilir.
 kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna**
 (`products.comparison_group`, örn. `coca-cola-1-5l`) koyar. Müşteri bir ürünü
 takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.
-"Destek al" ve "Premium için yaz" düğmeleri şimdilik yalnızca görünümdür.
+"Destek al" ve "Premium için yaz" düğmeleri (hem portal ana sayfasındaki plan
+kartında hem Planım sayfasında) Gmail'in web compose linkine
+(`https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com`) yeni
+sekmede açılır. `mailto:` yerine bu yöntem seçildi çünkü kullanıcının
+bilgisayarında varsayılan bir masaüstü mail uygulaması kurulu olmayabilir;
+bu durumda `mailto:` linki sessizce hiçbir şey yapmaz.
 
 Alışveriş listesi tek bir sepetten ibaret değildir: müşteri **birden fazla
 sepet** oluşturabilir (`basket_lists` tablosu: `customer_id`, `name`,
@@ -539,3 +544,6 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Panel: ürünlere karşılaştırma grubu alanı
 - [x] Panel: Vercel'e deploy edildi (Root Directory `web`, gerekli ortam değişkenleri tanımlandı)
 - [x] Panel: Talepler sayfasında hesabı zaten açılmış talepler için de silme butonu görünür hale getirildi (önceden sadece hesap açılmamış taleplerde vardı)
+- [x] Bot: aynı turda birden fazla ürün çekilirken aralarına rastgele 2-5 saniye bekleme eklendi (bot koruması riskini azaltmak için)
+- [x] Müşteri portalı: Haftalık rapor sayfasında ürünlerin hangi mağazadan takip edildiği gösteriliyor
+- [x] Müşteri portalı: "Destek al" ve "Premium için yaz" düğmeleri Gmail web compose linkine bağlandı (masaüstü mail uygulaması gerektirmeden çalışır)
