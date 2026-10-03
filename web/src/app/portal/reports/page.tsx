@@ -6,6 +6,8 @@ import {
   type ReportProduct,
 } from "@/components/portal-report";
 
+type Source = { name: string } | { name: string }[] | null;
+
 type SubRow = {
   target_price: number | null;
   products:
@@ -14,15 +16,22 @@ type SubRow = {
         name: string;
         currency: string;
         categories: { name: string } | { name: string }[] | null;
+        sources: Source;
       }
     | {
         id: number;
         name: string;
         currency: string;
         categories: { name: string } | { name: string }[] | null;
+        sources: Source;
       }[]
     | null;
 };
+
+function sourceName(value: Source): string {
+  if (!value) return "";
+  return Array.isArray(value) ? (value[0]?.name ?? "") : value.name;
+}
 
 export default async function ReportsPage() {
   const supabase = await createClient();
@@ -43,7 +52,7 @@ export default async function ReportsPage() {
 
   const { data: subData } = await supabase
     .from("subscriptions")
-    .select("target_price, products(id, name, currency, categories(name))")
+    .select("target_price, products(id, name, currency, categories(name), sources(name))")
     .eq("customer_id", customer.id);
 
   const subs = ((subData ?? []) as SubRow[])
@@ -102,11 +111,13 @@ export default async function ReportsPage() {
     const category = Array.isArray(p.categories)
       ? (p.categories[0]?.name ?? "")
       : (p.categories?.name ?? "");
+    const source = sourceName(p.sources);
 
     return {
       id: p.id,
       name: p.name,
       category,
+      source,
       currency: p.currency,
       target,
       series,

@@ -7,6 +7,7 @@ export type ReportProduct = {
   id: number;
   name: string;
   category: string;
+  source: string;
   currency: string;
   target: number | null;
   // Son 30 günün günlük fiyatları (eskiden yeniye), boş günler doldurulmuş.
@@ -327,6 +328,8 @@ export function PortalReport({
                   {p.name}
                   <small className="block text-xs font-medium text-zinc-500">
                     {p.category}
+                    {p.category && p.source && " · "}
+                    {p.source}
                   </small>
                 </span>
                 <span className="relative h-3 overflow-hidden rounded-full bg-zinc-800">
@@ -443,7 +446,9 @@ export function PortalReport({
           <div>
             <h4 className="text-lg font-bold">{selected.name}</h4>
             <small className="text-zinc-500">
-              {selected.category} · son {period} gün
+              {selected.category}
+              {selected.category && selected.source && " · "}
+              {selected.source} · son {period} gün
             </small>
           </div>
           <span

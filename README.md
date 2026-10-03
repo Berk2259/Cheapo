@@ -65,6 +65,12 @@ Kontrol aralığı en az 5 dakikadır. Bir ürünün linki değiştirilirse eski
 sıfırlanır, böylece bot yeni sayfadaki fiyatı eski ürünle kıyaslayıp yanlış
 bildirim göndermez.
 
+
+Aynı turda birden fazla ürünün kontrol zamanı gelmişse, ürünler art arda
+gecikmesiz çekilmez; her ürün arasında 2-5 saniye rastgele bekleme vardır
+(`checker.py`). Bu, aynı siteye kısa sürede çok sayıda istek gidip bot
+koruması tarafından engellenme riskini azaltır.
+
 Admin panel `/admin` altındadır (`/admin/login` hariç, girişsiz erişilemez). Kök
 adres (`/`) herkese açık tanıtım sayfasıdır (landing page).
 
@@ -157,8 +163,9 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
   kilitli önizleme görür.
 
 Haftalık rapor, `price_daily` görünümündeki günlük son fiyatlardan ve bildirim
-kayıtlarından hesaplanır (son 7 ya da 30 gün). Ürün kıyası, aynı ürünün farklı
-satıcılardaki fiyatını yan yana gösterir: yönetici, aynı ürünün her satıcıdaki
+kayıtlarından hesaplanır (son 7 ya da 30 gün); ürün listesinde ve seçili ürün
+detayında kategorinin yanında hangi mağazadan takip edildiği de gösterilir.
+Ürün kıyası, aynı ürünün farklı satıcılardaki fiyatını yan yana gösterir: yönetici, aynı ürünün her satıcıdaki
 kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna**
 (`products.comparison_group`, örn. `coca-cola-1-5l`) koyar. Müşteri bir ürünü
 takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.

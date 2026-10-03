@@ -1,5 +1,7 @@
 import asyncio
 import os
+import random
+import time
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client
@@ -120,6 +122,7 @@ def run_check_cycle() -> None:
         change = check_product(product)
         if change:
             changes.append(change)
+        time.sleep(random.uniform(2, 5))
 
     if changes:
         print(f"{len(changes)} üründe fiyat değişti, bildirimler işleniyor")
