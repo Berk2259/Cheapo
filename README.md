@@ -547,3 +547,4 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Bot: aynı turda birden fazla ürün çekilirken aralarına rastgele 2-5 saniye bekleme eklendi (bot koruması riskini azaltmak için)
 - [x] Müşteri portalı: Haftalık rapor sayfasında ürünlerin hangi mağazadan takip edildiği gösteriliyor
 - [x] Müşteri portalı: "Destek al" ve "Premium için yaz" düğmeleri Gmail web compose linkine bağlandı (masaüstü mail uygulaması gerektirmeden çalışır)
+- [x] Planım sayfası ve landing page planlar bölümü: Premium özellik listesine eksik olan "Alışveriş listesi" eklendi

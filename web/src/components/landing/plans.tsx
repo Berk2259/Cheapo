@@ -20,8 +20,8 @@ const premiumItems: Item[] = [
   { text: "Öncelikli destek" },
   { text: "Satıcılar arası fiyat kıyaslama" },
   { text: "Haftalık ve aylık rapor ve analiz" },
+  { text: "Alışveriş listesi ve satıcı kıyası" },
 ];
-
 const iconPaths = {
   milk: (
     <>
