@@ -11,15 +11,23 @@ export function Navbar({ dark = false }: { dark?: boolean }) {
         <Logo size={34} rounded={11} />
         Cheapo
       </div>
-      <Link
-        href="/login"
-        className={`rounded-full border-2 px-6 py-3 text-[15px] font-bold transition hover:-translate-y-0.5 ${dark
-            ? "border-white/60 text-white"
-            : "border-ink bg-white text-ink"
-          }`}
-      >
-        Giriş yap
-      </Link>
+      <div className="flex items-center gap-2.5">
+        <Link
+          href="/login"
+          className={`rounded-full border-2 px-6 py-3 text-[15px] font-bold transition hover:-translate-y-0.5 ${dark
+              ? "border-white/60 text-white"
+              : "border-ink bg-white text-ink"
+            }`}
+        >
+          Giriş yap
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-full border-2 border-brand-light bg-brand-light px-6 py-3 text-[15px] font-bold text-ink transition hover:-translate-y-0.5"
+        >
+          Kayıt ol
+        </Link>
+      </div>
     </nav>
   );
 }

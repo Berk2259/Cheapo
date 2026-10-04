@@ -11,7 +11,7 @@ function oneName(v: NameRef): string {
 export default async function TrashPage() {
   const supabase = await createClient();
 
-  const [products, sources, categories, customers, subscriptions, leads, notifications, priceHistory, customerRequests] =
+  const [products, sources, categories, customers, subscriptions, notifications, priceHistory, customerRequests] =
     await Promise.all([
       supabase
         .from("products")
@@ -32,10 +32,6 @@ export default async function TrashPage() {
       supabase
         .from("subscriptions")
         .select("id, deleted_at, customers(name), products(name)")
-        .not("deleted_at", "is", null),
-      supabase
-        .from("leads")
-        .select("id, name, contact, deleted_at")
         .not("deleted_at", "is", null),
       supabase
         .from("notification_log")
@@ -86,13 +82,6 @@ export default async function TrashPage() {
       title: `${oneName(s.customers)} → ${oneName(s.products)}`,
       subtitle: "Takip",
       deletedAgo: timeAgo(s.deleted_at),
-    })),
-    ...(leads.data ?? []).map((l) => ({
-      table: "leads" as const,
-      id: l.id,
-      title: l.name,
-      subtitle: `Talep · ${l.contact}`,
-      deletedAgo: timeAgo(l.deleted_at),
     })),
     ...(notifications.data ?? []).map((n) => ({
       table: "notification_log" as const,

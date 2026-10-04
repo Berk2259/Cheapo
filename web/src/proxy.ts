@@ -56,6 +56,20 @@ export async function proxy(request: NextRequest) {
     }
 
     const isCustomer = Boolean(customer);
+    const isAdmin =
+      !isCustomer &&
+      !!user.email &&
+      user.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+
+    // Ne müşteri kaydı var ne admin e-postası: yetim/tutarsız hesap.
+    // Yanlışlıkla admin sayılmasın diye oturumu kapatıp login'e gönder.
+    if (!isCustomer && !isAdmin) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("invalid", "1");
+      return NextResponse.redirect(url);
+    }
 
     if (isLoginPage) {
       const url = request.nextUrl.clone();

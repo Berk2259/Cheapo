@@ -31,7 +31,6 @@ export default async function AdminHomePage() {
     customers,
     products,
     subscriptions,
-    leads,
     requests,
     notifToday,
     notifTotal,
@@ -42,10 +41,6 @@ export default async function AdminHomePage() {
       .from("products")
       .select("id, name, is_active, last_status, last_checked_at"),
     supabase.from("subscriptions").select("*", { count: "exact", head: true }),
-    supabase
-      .from("leads")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "bekliyor"),
     supabase
       .from("customer_requests")
       .select("*", { count: "exact", head: true })
@@ -66,7 +61,6 @@ export default async function AdminHomePage() {
     customers,
     products,
     subscriptions,
-    leads,
     requests,
     notifToday,
     notifTotal,
@@ -103,16 +97,6 @@ export default async function AdminHomePage() {
       text: failing.length > 2 ? `${names} ve diğerleri` : names,
       href: "/admin/products",
       cta: "Ürünlere git",
-    });
-  }
-  if ((leads.count ?? 0) > 0) {
-    attention.push({
-      tone: "amber",
-      icon: "inbox",
-      title: `${leads.count} yeni talep bekliyor`,
-      text: "Landing page formundan geldi",
-      href: "/admin/leads",
-      cta: "Talepleri aç",
     });
   }
   if ((requests.count ?? 0) > 0) {

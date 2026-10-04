@@ -227,7 +227,7 @@ export function Plans() {
               <FeatureList items={freeItems} />
               <div className="mt-auto pt-7">
                 <a
-                  href="#talep"
+                  href="/signup"
                   className="pl-shine block rounded-full border-2 border-ink bg-white px-[22px] py-[13px] text-center text-[15px] font-bold text-ink transition hover:-translate-y-0.5"
                 >
                   Ücretsiz başla
@@ -276,7 +276,7 @@ export function Plans() {
               <FeatureList items={premiumItems} hot />
               <div className="mt-auto pt-7">
                 <a
-                  href="#talep"
+                  href="/signup"
                   className="pl-shine block rounded-full border-2 border-brand-light bg-brand-light px-[22px] py-[13px] text-center text-[15px] font-bold text-ink shadow-[0_12px_30px_rgba(94,234,212,0.3)] transition hover:-translate-y-0.5"
                 >
                   Premium için yaz

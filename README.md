@@ -18,14 +18,14 @@ Price_Tracker_Bot/
 │   ├── requirements.txt
 │   └── .env           Gizli anahtarlar (GitHub'a gitmez)
 ├── web/
-│   ├── src/app/admin/     Admin sayfaları (giriş, talepler, müşteri talepleri, müşteriler, kategoriler, kaynaklar, ürünler, takipler, fiyat geçmişi, bildirimler)
+│   ├── src/app/admin/     Admin sayfaları (yeni kayıtlar, müşteri talepleri, Premium talepleri, hesap kaldırma talepleri, müşteriler, kategoriler, kaynaklar, ürünler,takipler, fiyat geçmişi, bildirimler)
 │   ├── src/app/login/     Tek giriş sayfası (admin ve müşteri için)
 │   ├── src/app/portal/    Müşteri portalı (ürünlerim, bildirimler, talepler, plan, rapor, kıyas, alışveriş listesi)
 │   ├── src/app/page.tsx   Herkese açık tanıtım sayfası (landing page)
 │   ├── src/lib/supabase/  Supabase bağlantıları (tarayıcı ve sunucu)
 │   ├── src/proxy.ts       Giriş koruması
-│   ├── src/components/    Ortak bileşenler (yan menü, butonlar, talep formu, logo)
-│   ├── src/components/landing/  Landing page bölümleri (hero, 3 adımda hazır, kategoriler, SSS, planlar, talep)
+│   ├── src/components/    Ortak bileşenler (yan menü, butonlar, logo)
+│   ├── src/components/landing/  Landing page bölümleri (hero, 3 adımda hazır, kategoriler, SSS, planlar)
 │   └── .env.local         Panel ayarları (GitHub'a gitmez)
 └── supabase/          Veritabanı şema dosyaları (SQL)
 ```
@@ -106,15 +106,23 @@ kurallar `is_admin()` fonksiyonuna bağlıdır; bu fonksiyon yalnızca admin
 hesabının kimliğini (UID) kabul eder. Başka bir hesap açılsa bile hiçbir veri
 görülemez. Bot ise `service_role` ile çalışır ve bu kuralları atlar.
 
-Giriş tek bir sayfadan (`/login`) yapılır. Giriş başarılı olunca sistem bu
-hesabın `customers` tablosunda bir kaydı olup olmadığına bakar: varsa
-müşteri portalına (`/portal`), yoksa admin panele (`/admin`) yönlendirir.
-Her istekte bu kontrol tekrar yapılır, yani bir müşteri adres çubuğuna elle
-`/admin` yazsa da otomatik olarak `/portal`'a geri gönderilir (ve tersi).
-Müşteri çöp kutusuna atılmışsa (`customers.deleted_at` dolu) bu kontrol
-"kayıt yok" saymaz; oturumu kapatılıp `/login`'e geri gönderilir — yoksa
-"kayıt yoksa admindir" varsayımı yüzünden yanlışlıkla admin paneline
-yönlendirilirdi.
+Giriş tek bir sayfadan (`/login`) yapılır. Yönlendirme mantığı `proxy.ts`'te:
+giriş yapan hesabın `customers` tablosunda kaydı varsa müşteri portalına
+(`/portal`) gider. Kaydı yoksa, e-postası `ADMIN_EMAIL` ortam değişkenindeki
+adresle eşleşiyorsa admin panele (`/admin`) gider; **eşleşmiyorsa** (ne
+müşteri kaydı ne admin e-postası) sistem bu hesabı güvenlik gereği otomatik
+oturumdan çıkarır ve `/login`'e geri gönderir. Bu kontrol, kendi kendine kayıt
+(`/signup`) açıldıktan sonra eklendi: daha önce "müşteri kaydı yoksa
+admindir" varsayımı vardı, ki tek admin hesabı dışında kimsenin auth hesabı
+olmadığı dönemde güvenliydi; ama başarısız/yarım kalan bir kayıt denemesi
+(auth hesabı oluşur ama `customers` satırı oluşmazsa) o kullanıcıyı
+yanlışlıkla admin gibi gösterebilirdi — artık böyle bir hesap gerçek admin
+verisini göremez (RLS zaten engeller) ama artık admin paneline hiç
+yönlendirilmez de, direkt atılır. Her istekte bu kontrol tekrar yapılır,
+yani bir müşteri adres çubuğuna elle `/admin` yazsa da otomatik olarak
+`/portal`'a geri gönderilir (ve tersi). Müşteri çöp kutusuna atılmışsa
+(`customers.deleted_at` dolu) bu kontrol "kayıt yok" saymaz; oturumu
+kapatılıp `/login`'e "hesap kaldırılmış" mesajıyla geri gönderilir.
 
 Giriş sayfası koyu temalı, ortada bölünmüş kartlı bir tasarıma sahiptir
 (`components/login-showcase.tsx`, `components/login-showcase-data.ts`).
@@ -126,13 +134,22 @@ e-posta/şifre alanları, şifre göster-gizle, "Beni hatırla" (şu an yalnızc
 görsel, kalıcı bir davranışı yok) ve "Şifremi unuttum" (henüz pasif, ileride
 eklenecek) içerir.
 
-### Talep ve hesap açma akışı
+### Kendi kendine kayıt
 
-Ziyaretçi landing page'deki formu doldurup talep gönderir (`leads` tablosu).
-Admin, Talepler sayfasından talebi inceler ve uygun bulursa e-posta/şifre
-belirleyip hesap açar. Bu işlem Supabase Auth'ta yeni bir kullanıcı, ardından
-`customers` tablosunda o kullanıcıya bağlı bir müşteri kaydı oluşturur ve
-talebi otomatik "Tamamlandı" yapar.
+Ziyaretçi landing page'deki "Kayıt ol" butonuyla (`/signup`) ad, e-posta ve
+şifresini girip hesabını anında açar; admin onayı gerekmez. Sunucu tarafında
+(`app/actions.ts` → `signUpCustomer`) önce Supabase Auth'ta kullanıcı
+oluşturulur (`email_confirm: true`, doğrulama maili beklenmez), sonra
+`customers` tablosunda `plan: "free"` ile bir kayıt açılır, ardından otomatik
+oturum açılıp `/portal`'a yönlendirilir. İki adım da `service_role` ile
+(RLS'i atlayarak) yapılır çünkü bu noktada henüz bir oturum yoktur; adım 2
+başarısız olursa adım 1'de açılan auth hesabı geri silinir (yetim hesap
+kalmasın diye).
+
+Önceden bu akış "talep bırak, admin elle hesap açsın" şeklindeydi (`leads`
+tablosu + Talepler sayfası); bu sistem tamamen kaldırıldı. Premium'a geçmek
+isteyen müşteri önce Ücretsiz kaydolur, sonra portaldan (Planım sayfası)
+Premium talebi gönderir — aşağıya bakın.
 
 ### Müşteri portalı
 
@@ -280,9 +297,10 @@ giriş sayfası ve portal etkilenmez. Renkler yine `globals.css`'te, `.force-dar
 içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
 
 - **Yan menü** (`sidebar.tsx`): Gelenler, Katalog, Takip gruplarına ayrılmıştır.
-  Talepler, Müşteri talepleri ve Hesap kaldırma talepleri yanında bekleyen
-  kayıtların sayısı kırmızı rozet olarak görünür (sayılar `admin/layout.tsx`'te
-  hesaplanır).
+  Gelenler grubu: Yeni kayıtlar, Müşteri talepleri, Premium talepleri, Hesap
+  kaldırma talepleri. Bekleyen kayıt sayısı olanlarda (Müşteri/Premium/Hesap
+  kaldırma talepleri — Yeni kayıtlar hariç, o bir bekleme kuyruğu değil bilgi
+  akışıdır) kırmızı rozet görünür (sayılar `admin/layout.tsx`'te hesaplanır).
 - **Üst çubuk ve arama** (`admin-topbar.tsx`, `admin-nav.ts`): sayfa başlığı ve
   Ctrl+K ile açılan sayfa arama penceresi.
 - **Ana sayfa**: "Dikkat gerektirenler" (okunamayan ürünler, bekleyen talepler,
@@ -292,9 +310,17 @@ içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
   ve tek tıkla "şimdi kontrol et". Ürün ekleme ve düzenleme sağdan açılan
   çekmecede yapılır (`product-drawer.tsx`); aynı çekmecede ürünün karşılaştırma
   grubu da girilir.
-- **Talepler ve Müşteri talepleri**: gelen kutusu düzeni; durum filtreleri,
-  arama ve renkli durum seçicisi. Talepler sayfasında "Hesap aç" kartın içinde
-  açılır.
+- **Yeni kayıtlar**: kendi kendine kayıt olan müşteriler, en yeni üstte;
+  isim, e-posta (Supabase Auth'tan `service_role` ile okunur, `customers`
+  tablosunda e-posta tutulmaz), plan, Telegram durumu ve katılım tarihi.
+  Arama, aktif/pasif yapma ve silme (çöp kutusuna atma) içerir.
+- **Müşteri talepleri**: gelen kutusu düzeni; durum filtreleri, arama ve
+  renkli durum seçicisi.
+- **Premium talepleri**: müşterinin portaldaki "Planım" sayfasından
+  gönderdiği Premium'a geçme talepleri (bıraktığı telefon/not varsa görünür).
+  "Onayla, Premium yap" planı otomatik Premium yapar; "Reddet" talebi
+  reddedilmiş olarak işaretler. İkisi de geçmişte kalır (silinmez), sadece
+  bekleyen taleplerde buton görünür.
 - **Hesap kaldırma talepleri**: müşterilerin "Hesap ayarları"ndan gönderdiği
   kaldırma taleplerinin listesi, üstte arama çubuğu. Satıra tıklayınca genişler
   ve hesabın etkisini gösterir (takip edilen ürün sayısı, Telegram durumu,
@@ -321,8 +347,8 @@ Tüm admin sayfaları yenilenmiştir.
 Web paneli **Vercel**'e deploy edilir (repo mono-repo olduğu için Root Directory
 `web` seçilmelidir). Gerekli ortam değişkenleri `web/.env.local` ile aynıdır:
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
-`TELEGRAM_BOT_USERNAME`, `SUPABASE_SERVICE_ROLE_KEY`. `master`'a her push
-otomatik yeni bir production deploy tetikler.
+`TELEGRAM_BOT_USERNAME`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`.
+`master`'a her push otomatik yeni bir production deploy tetikler.
 
 Bot (`bot/main.py`) sürekli çalışan bir süreçtir (Telegram dinleme + 60
 saniyede bir fiyat kontrolü), bu yüzden Vercel gibi serverless platformlarda
@@ -393,9 +419,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 TELEGRAM_BOT_USERNAME=
 SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_EMAIL=
 ```
 `TELEGRAM_BOT_USERNAME`, müşteri bağlama linkini oluşturmak için botun
-kullanıcı adıdır (başında `@` olmadan).
+kullanıcı adıdır (başında `@` olmadan). `ADMIN_EMAIL`, admin panele kimin
+girebileceğini belirleyen tek e-posta adresidir (bkz. "Panel erişimi");
+büyük/küçük harf ve boşluk farkı olmadan Supabase Auth'taki gerçek admin
+e-postanla birebir aynı olmalı.
 
 Panelde yalnızca `sb_publishable_` ile başlayan anahtar kullanılır.
 Service role anahtarı panele asla konmaz.
@@ -428,6 +458,7 @@ Panel `http://localhost:3000` adresinde açılır.
 | `subscriptions` | Müşteri - ürün takibi, hedef fiyat |
 | `price_history` | Fiyat geçmişi |
 | `notification_log` | Gönderilen bildirim kayıtları |
+| `customer_premium_requests` | Portaldan gönderilen Premium'a geçme talepleri (`status`: bekliyor/onaylandi/reddedildi) |
 
 Ek olarak:
 
@@ -446,6 +477,10 @@ Ek olarak:
   kaldırma talebi gönderdiğinde dolar; admin panelde **Hesap kaldırma
   talepleri** sayfasından görülür, onaylanırsa hesap normal silme akışıyla
   çöp kutusuna atılır, reddedilirse bu alan temizlenir.
+- `customer_premium_requests`: müşteri aynı anda sadece bir **bekleyen** talebe
+  sahip olabilir (`customer_id` üzerinde kısmi unique index, `status =
+  'bekliyor'` iken). Onaylanan/reddedilen talepler silinmez, geçmiş olarak
+  tabloda kalır.
 - `price_daily` (görünüm): `price_history`'nin günlük son fiyat özeti (Türkiye
   saatine göre). `security_invoker` ile çalışır, yani sorgulayan kullanıcının
   RLS izinleri geçerlidir.
@@ -494,7 +529,7 @@ Admin panelde bir kayıt silindiğinde veritabanından hemen kaldırılmaz;
 `deleted_at` sütunu doldurulur ("çöpe atılır") ve normal listelerden kaybolur.
 Gerçek silme yalnızca **Çöp kutusu** sayfasından "Kalıcı olarak sil" ile,
 onay istendikten sonra yapılır. Kapsam: `products`, `sources`, `categories`,
-`customers`, `subscriptions`, `leads`, `notification_log`, `price_history`,
+`customers`, `subscriptions`, `notification_log`, `price_history`,
 `customer_requests` — panelde silme işlemi olan her tablo.
 
 Genel action'lar tek dosyada toplanmıştır (`app/admin/trash/actions.ts`):
@@ -587,3 +622,8 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Ürün kıyası sayfası: karşılaştırma grupları kategoriye göre başlıklı bölümlere ayrıldı, üstte kategoriye hızlı kaydırma butonları eklendi
 - [x] Panel: Hesap kaldırma talepleri sayfası (arama, genişleyen kartlarda hesap etkisi, talebi reddetme/hesabı silme), sol menüde bekleyen sayısı rozeti
 - [x] Ürün kıyası sayfası: kategori bölümleri artık kendi içinde sayfalanıyor (5 ürün grubu/sayfa)
+- [x] `leads` tablosu ve Talepler sayfası tamamen kaldırıldı (SQL ve kod), yerine kendi kendine kayıt geldi
+- [x] Landing page: self-servis kayıt (`/signup`), navbar'da "Giriş yap" / "Kayıt ol" butonları, eski gömülü talep formu kaldırıldı
+- [x] Güvenlik: admin panele girişi "müşteri kaydı yoksa admindir" varsayımı yerine `ADMIN_EMAIL` ortam değişkeniyle açıkça belirleme; eşleşmeyen/yetim hesaplar otomatik oturumdan atılıyor
+- [x] Panel: Premium talepleri sayfası (`customer_premium_requests` tablosu), portaldaki Planım sayfasından telefon/not ile talep gönderme, onayla/reddet (geçmiş korunur)
+- [x] Panel: Yeni kayıtlar sayfası (self-servis kayıt olan müşteriler, arama, aktif/pasif, silme)

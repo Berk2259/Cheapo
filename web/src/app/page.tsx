@@ -3,7 +3,6 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Categories } from "@/components/landing/categories";
 import { Plans } from "@/components/landing/plans";
 import { Faq } from "@/components/landing/faq";
-import { LeadSection } from "@/components/landing/lead-section";
 import { Footer } from "@/components/landing/footer";
 
 export default function LandingPage() {
@@ -22,7 +21,6 @@ export default function LandingPage() {
         <Categories />
         <Faq />
         <Plans />
-        <LeadSection />
       </div>
 
       <Footer />

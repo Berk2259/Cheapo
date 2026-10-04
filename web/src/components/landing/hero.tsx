@@ -30,7 +30,7 @@ export function Hero() {
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="#talep"
+                href="/signup"
                 className="rounded-full border-2 border-brand-light bg-brand-light px-[26px] py-[14px] text-[15px] font-bold text-ink shadow-[0_12px_34px_rgba(94,234,212,0.35)] transition hover:-translate-y-0.5"
               >
                 Hemen başla — ücretsiz

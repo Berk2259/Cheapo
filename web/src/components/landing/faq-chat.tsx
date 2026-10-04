@@ -152,10 +152,12 @@ export function FaqChat({ questions }: { questions: Question[] }) {
 
           {allAsked && (
             <a
-              href="#talep"
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="pf-msg ml-auto text-sm font-bold text-brand hover:text-brand-dark"
             >
-              Başka sorun mu var? Talep formundan yaz →
+              Başka sorun mu var? Bize yaz →
             </a>
           )}
         </div>

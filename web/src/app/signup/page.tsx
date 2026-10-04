@@ -1,18 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { AdminIcon } from "@/components/admin-icons";
 import { LoginShowcase } from "@/components/login-showcase";
 import { Logo } from "@/components/logo";
+import { signUpCustomer } from "@/app/actions";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function SignupPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,33 +19,12 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error || !data.user) {
-      setError("E-posta veya şifre hatalı.");
+    const result = await signUpCustomer({ name, email, password });
+    if (!result.ok) {
+      setError(result.message ?? "Hesap oluşturulamadı.");
       setLoading(false);
-      return;
     }
-
-    const { data: customer } = await supabase
-      .from("customers")
-      .select("id, deleted_at")
-      .eq("auth_user_id", data.user.id)
-      .maybeSingle();
-
-    if (customer?.deleted_at) {
-      await supabase.auth.signOut();
-      setError("Bu hesap kaldırılmış. Yardım için yöneticinizle iletişime geçin.");
-      setLoading(false);
-      return;
-    }
-
-    router.push(customer ? "/portal" : "/admin");
-    router.refresh();
+    // Başarılıysa signUpCustomer sunucu tarafında /portal'a yönlendirir.
   }
 
   return (
@@ -64,11 +41,11 @@ export default function LoginPage() {
               Cheapo
             </div>
             <h2 className="mt-11 max-w-[320px] text-[28px] font-extrabold leading-[1.28] tracking-[-0.02em]">
-              Fiyatları sen değil, biz takip edelim.
+              30 saniyede kaydol, hemen takibe başla.
             </h2>
             <p className="mt-2.5 max-w-[300px] text-[14.5px] text-[#bfe6e0]">
-              Takip ettiğin ürünler ucuzlayınca Telegram&apos;dan ilk sen
-              haberdar ol.
+              Kredi kartı gerekmez. Ücretsiz planla hemen başlarsın, istersen
+              sonra Premium&apos;a geçersin.
             </p>
             <div className="mt-[34px] grid gap-[15px]">
               {[
@@ -109,14 +86,36 @@ export default function LoginPage() {
               <Logo size={40} rounded={12} />
             </span>
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-zinc-50">
-              Tekrar hoş geldin
+              Hesabını oluştur
             </h1>
             <p className="mt-1 text-sm text-zinc-500">
-              Hesabına giriş yap, ürünlerin nasıl gidiyor bak.
+              30 saniyede kaydol, hemen ürün takibine başla.
             </p>
 
             <div className="relative mt-4">
-              <span className="pointer-events-none absolute left-3.5 top-[19px] text-zinc-500 peer-focus:text-emerald-500">
+              <span className="pointer-events-none absolute left-3.5 top-[19px] text-zinc-500">
+                <AdminIcon name="users" size={16} />
+              </span>
+              <input
+                id="name"
+                type="text"
+                required
+                autoComplete="name"
+                placeholder=" "
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="peer w-full rounded-[14px] border-2 border-zinc-800 bg-zinc-950 px-[42px] py-[22px] pb-2 text-[14.5px] text-zinc-50 outline-none transition focus:border-emerald-500 focus:shadow-[0_0_0_5px_rgba(45,212,191,0.14)]"
+              />
+              <label
+                htmlFor="name"
+                className="pointer-events-none absolute left-[42px] top-4 text-[14.5px] text-zinc-500 transition-all peer-focus:top-1.5 peer-focus:text-[10.5px] peer-focus:font-bold peer-focus:text-emerald-500 peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10.5px] peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:text-emerald-500"
+              >
+                Ad Soyad
+              </label>
+            </div>
+
+            <div className="relative mt-4">
+              <span className="pointer-events-none absolute left-3.5 top-[19px] text-zinc-500">
                 <AdminIcon name="mail" size={16} />
               </span>
               <input
@@ -145,7 +144,8 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 required
-                autoComplete="current-password"
+                minLength={6}
+                autoComplete="new-password"
                 placeholder=" "
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -155,7 +155,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="pointer-events-none absolute left-[42px] top-4 text-[14.5px] text-zinc-500 transition-all peer-focus:top-1.5 peer-focus:text-[10.5px] peer-focus:font-bold peer-focus:text-emerald-500 peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10.5px] peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:text-emerald-500"
               >
-                Şifre
+                Şifre (en az 6 karakter)
               </label>
               <button
                 type="button"
@@ -165,29 +165,6 @@ export default function LoginPage() {
               >
                 <AdminIcon name={showPassword ? "eyeoff" : "eye"} size={17} />
               </button>
-            </div>
-
-            <div className="mt-3.5 flex items-center justify-between text-[13px]">
-              <button
-                type="button"
-                onClick={() => setRememberMe((v) => !v)}
-                className="flex select-none items-center gap-1.5 text-zinc-500"
-              >
-                <span
-                  className={
-                    "grid h-[17px] w-[17px] place-items-center rounded-[6px] border-2 transition " +
-                    (rememberMe
-                      ? "border-emerald-500 bg-emerald-500 text-[#052e2b]"
-                      : "border-zinc-800 bg-zinc-950 text-transparent")
-                  }
-                >
-                  <AdminIcon name="check" size={11} stroke={3.4} />
-                </span>
-                Beni hatırla
-              </button>
-              <a href="#" className="font-bold text-emerald-500 hover:underline">
-                Şifremi unuttum
-              </a>
             </div>
 
             {error && (
@@ -205,16 +182,16 @@ export default function LoginPage() {
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#052e2b]/35 border-t-[#052e2b]" />
               ) : (
                 <>
-                  Giriş yap
+                  Ücretsiz hesap oluştur
                   <AdminIcon name="arrow" size={16} />
                 </>
               )}
             </button>
 
             <p className="mt-[22px] text-center text-[12.5px] text-zinc-500">
-              Hesabın yok mu?{" "}
-              <a href="/signup" className="font-bold text-emerald-500 hover:underline">
-                Kayıt ol
+              Zaten hesabın var mı?{" "}
+              <a href="/login" className="font-bold text-emerald-500 hover:underline">
+                Giriş yap
               </a>
             </p>
           </form>

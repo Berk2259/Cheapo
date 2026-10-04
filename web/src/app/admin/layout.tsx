@@ -19,19 +19,18 @@ export default async function AdminLayout({
     "categories",
     "customers",
     "subscriptions",
-    "leads",
     "notification_log",
     "price_history",
     "customer_requests",
   ] as const;
 
-  const [leads, customerRequests, removalRequests, ...trashCounts] = await Promise.all([
+  const [customerRequests, premiumRequests, removalRequests, ...trashCounts] = await Promise.all([
     supabase
-      .from("leads")
+      .from("customer_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "bekliyor"),
     supabase
-      .from("customer_requests")
+      .from("customer_premium_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "bekliyor"),
     supabase
@@ -50,12 +49,11 @@ export default async function AdminLayout({
   const trashTotal = trashCounts.reduce((sum, r) => sum + (r.count ?? 0), 0);
 
   const badges = {
-    "/admin/leads": leads.count ?? 0,
     "/admin/customer-requests": customerRequests.count ?? 0,
+    "/admin/premium-requests": premiumRequests.count ?? 0,
     "/admin/removal-requests": removalRequests.count ?? 0,
     "/admin/trash": trashTotal,
   };
-
   return (
     <div className="force-dark min-h-screen bg-zinc-950 text-zinc-50">
       <Sidebar email={user?.email} badges={badges} />

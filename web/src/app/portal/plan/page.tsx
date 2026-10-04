@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminIcon } from "@/components/admin-icons";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { PortalPremiumRequest } from "@/components/portal-premium-request";
 
 type Feature = { text: React.ReactNode; free: boolean; soon?: boolean };
 
@@ -65,6 +66,13 @@ export default async function PlanPage() {
     ).size;
 
     const premium = customer.plan === "premium";
+
+    const { data: pendingRequest } = await supabase
+        .from("customer_premium_requests")
+        .select("id")
+        .eq("customer_id", customer.id)
+        .eq("status", "bekliyor")
+        .maybeSingle();
 
     return (
         <div>
@@ -166,14 +174,7 @@ export default async function PlanPage() {
                             Destek al
                         </a>
                     ) : (
-                        <a
-                            href="https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#fbbf24,#f59e0b)] px-4 py-2.5 font-extrabold text-[#3b2a00] shadow-[0_10px_24px_-10px_#f59e0b]"
-                        >
-                            <AdminIcon name="crown" size={16} /> Premium için yaz
-                        </a>
+                        <PortalPremiumRequest alreadyRequested={!!pendingRequest} />
                     )}
                 </div>
             </div>

@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { STATUS_OPTIONS } from "@/components/lead-row";
 import {
   CustomerRequestRow,
   type CustomerRequest,
 } from "@/components/customer-request-row";
+
+const STATUS_OPTIONS = [
+  { value: "bekliyor", label: "Bekliyor" },
+  { value: "inceleniyor", label: "İnceleniyor" },
+  { value: "tamamlandi", label: "Tamamlandı" },
+  { value: "reddedildi", label: "Reddedildi" },
+];
 
 type Filter = "all" | string;
 

@@ -169,3 +169,40 @@ export async function toggleFavorite(
   revalidatePath("/portal/favorites");
   return { ok: true };
 }
+
+export async function requestPremiumUpgrade(input: {
+  phone: string;
+  note: string;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("auth_user_id", user?.id ?? "")
+    .maybeSingle();
+
+  if (!customer) return { ok: false, message: "Müşteri kaydı bulunamadı." };
+
+  const { error } = await supabase.from("customer_premium_requests").insert({
+    customer_id: customer.id,
+    phone: input.phone.trim() || null,
+    note: input.note.trim() || null,
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      message:
+        error.code === "23505"
+          ? "Zaten bekleyen bir Premium talebin var."
+          : "Talep gönderilemedi.",
+    };
+  }
+
+  revalidatePath("/portal/plan");
+  return { ok: true };
+}

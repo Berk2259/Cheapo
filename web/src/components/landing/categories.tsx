@@ -107,7 +107,7 @@ export function Categories() {
 
       <div className="grid grid-cols-2 gap-4 lg:auto-rows-[150px] lg:grid-cols-4">
         <a
-          href="#talep"
+          href="/signup"
           className="relative col-span-2 flex min-h-[190px] flex-col justify-between overflow-hidden rounded-3xl border border-brand bg-brand p-[30px] text-left text-white transition hover:bg-brand-dark lg:row-span-2"
         >
           <div className="pointer-events-none absolute -right-[30px] -top-[30px] opacity-[0.12]">
@@ -127,7 +127,7 @@ export function Categories() {
         </a>
 
         {categories.map((c) => (
-          <a key={c.title} href="#talep" className={smallCard}>
+          <a key={c.title} href="/signup" className={smallCard}>
             <div className="grid h-[42px] w-[42px] place-items-center rounded-[13px] bg-tint text-brand">
               <Icon>{icons[c.icon]}</Icon>
             </div>
@@ -139,7 +139,9 @@ export function Categories() {
         ))}
 
         <a
-          href="#talep"
+          href="https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex min-h-[150px] flex-col justify-between rounded-3xl border-[1.5px] border-dashed border-brand p-5 text-left text-brand-dark transition hover:bg-white"
         >
           <div className="grid h-[42px] w-[42px] place-items-center rounded-[13px] border-[1.5px] border-dashed border-brand">

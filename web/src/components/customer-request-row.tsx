@@ -2,11 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { AdminIcon } from "@/components/admin-icons";
-import { STATUS_OPTIONS } from "@/components/lead-row";
 import {
   deleteCustomerRequest,
   updateCustomerRequestStatus,
 } from "@/app/admin/customer-requests/actions";
+
+const STATUS_OPTIONS = [
+  { value: "bekliyor", label: "Bekliyor", cls: "bg-amber-400/15 text-amber-300" },
+  { value: "inceleniyor", label: "İnceleniyor", cls: "bg-sky-400/15 text-sky-300" },
+  { value: "tamamlandi", label: "Tamamlandı", cls: "bg-emerald-500/15 text-emerald-400" },
+  { value: "reddedildi", label: "Reddedildi", cls: "bg-red-400/15 text-red-400" },
+];
 
 export type CustomerRequest = {
   id: number;
