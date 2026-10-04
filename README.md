@@ -176,7 +176,11 @@ detayında kategorinin yanında hangi mağazadan takip edildiği de gösterilir.
 Ürün kıyası, aynı ürünün farklı satıcılardaki fiyatını yan yana gösterir: yönetici, aynı ürünün her satıcıdaki
 kaydını admin panelinde ürün düzenlerken aynı **karşılaştırma grubuna**
 (`products.comparison_group`, örn. `coca-cola-1-5l`) koyar. Müşteri bir ürünü
-takip ettiğinde, o ürünün grubundaki tüm marketler kıyas sayfasında görünür.
+takip ettiğinde, o ürünün grubundaki tüm satıcılar kıyas sayfasında görünür.
+Karşılaştırma grupları, içindeki ürünlerin kategorisine göre (Market,
+Elektronik, Giyim vb.) ayrı başlıklar altında gruplanır; üstte her
+kategoriye hızlıca kaydıran butonlar vardır (birden fazla kategori olduğunda
+anlamlı, tek kategoride de başlık yine görünür).
 "Destek al" ve "Premium için yaz" düğmeleri (hem portal ana sayfasındaki plan
 kartında hem Planım sayfasında) Gmail'in web compose linkine
 (`https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com`) yeni

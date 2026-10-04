@@ -19,10 +19,11 @@ type ProductRow = {
   last_checked_at: string | null;
   comparison_group: string | null;
   sources: Source;
+  categories: Source;
 };
 
 const productSelect =
-  "id, name, url, current_price, currency, last_checked_at, comparison_group, sources(name)";
+  "id, name, url, current_price, currency, last_checked_at, comparison_group, sources(name), categories(name)";
 
 function sourceName(value: Source): string {
   if (!value) return "";
@@ -94,7 +95,12 @@ export default async function ComparePage() {
     const rows = new Map<number, ProductRow>();
     for (const p of inGroups) if (p.comparison_group === key) rows.set(p.id, p);
     for (const p of followed) if (p.comparison_group === key) rows.set(p.id, p);
-    return { key, rows: [...rows.values()].map(toRow) };
+    const rowList = [...rows.values()];
+    return {
+      key,
+      category: sourceName(rowList[0]?.categories ?? null),
+      rows: rowList.map(toRow),
+    };
   });
 
   // Yalnızca kendisi olan (alternatifi bulunmayan) gruplar ve grupsuz ürünler.

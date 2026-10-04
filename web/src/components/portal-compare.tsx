@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { AdminIcon } from "@/components/admin-icons";
 
 export type CompareRow = {
@@ -11,7 +14,7 @@ export type CompareRow = {
   mine: boolean;
 };
 
-export type CompareGroup = { key: string; rows: CompareRow[] };
+export type CompareGroup = { key: string; category: string; rows: CompareRow[] };
 export type SoloProduct = { id: number; name: string; source: string };
 
 function money(value: number, currency: string) {
@@ -61,7 +64,32 @@ export function PortalCompare({
     return { g, sorted, cheapest, spread, spreadPct, showMarket, title };
   });
 
+  const CATEGORY_FALLBACK = "Diğer";
+
+  function slugify(key: string) {
+    return key.toLocaleLowerCase("tr").replace(/[^a-z0-9]+/g, "-");
+  }
+
+  function scrollToCategory(key: string | null) {
+    const id = key ? `compare-cat-${slugify(key)}` : "compare-top";
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const categoryCounts = new Map<string, number>();
+  for (const a of analysed) {
+    const key = a.g.category || CATEGORY_FALLBACK;
+    categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
+  }
+  const categoryPills = [
+    { key: null as string | null, label: "Tümü", count: analysed.length },
+    ...[...categoryCounts.entries()].map(([key, count]) => ({ key: key as string | null, label: key, count })),
+  ];
+  const sections = [...categoryCounts.keys()].map((key) => ({
+    key,
+    items: analysed.filter((a) => (a.g.category || CATEGORY_FALLBACK) === key),
+  }));
   const currency = groups[0]?.rows[0]?.currency ?? "TRY";
+
   const biggest = analysed.reduce(
     (best, a) => (a.spread > best.spread ? a : best),
     analysed[0],
@@ -114,10 +142,10 @@ export function PortalCompare({
     <div>
       <div className="ad-in">
         <h1 className="text-[26px] font-bold tracking-[-0.02em]">
-          Marketlerde fiyat kıyaslama
+          Satıcılar arası fiyat kıyaslama
         </h1>
         <p className="mt-0.5 text-zinc-500">
-          Takip ettiğin ürünlerin farklı marketlerdeki fiyatları.
+          Takip ettiğin ürünlerin farklı satıcılardaki fiyatları.
         </p>
       </div>
 
@@ -152,119 +180,146 @@ export function PortalCompare({
             ))}
           </div>
 
-          {analysed.map(
-            ({ g, sorted, cheapest, spread, spreadPct, showMarket, title }, gi) => (
-              <div
-                key={g.key}
-                className="ad-in mt-4 overflow-hidden rounded-[20px] border border-zinc-800 bg-zinc-900"
-                style={{ "--i": Math.min(gi + 4, 10) } as React.CSSProperties}
+          <div id="compare-top" className="mt-4 flex flex-wrap gap-2.5">
+            {categoryPills.map((p) => (
+              <button
+                key={p.key ?? "all"}
+                type="button"
+                onClick={() => scrollToCategory(p.key)}
+                className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-[13.5px] font-extrabold text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400"
               >
-                <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800 px-[18px] py-4">
-                  <b className="text-base">{title}</b>
-                  <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-extrabold text-emerald-300">
-                    {g.rows.length} {showMarket ? "market" : "ürün"}
-                  </span>
-                  {cheapest && spread > 0.001 ? (
-                    <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-green-400/15 px-3 py-1 text-[13px] font-extrabold text-green-400">
-                      <AdminIcon name="coin" size={14} />
-                      {showMarket ? cheapest.source : cheapest.name} en ucuz ·{" "}
-                      {money(spread, cheapest.currency)} fark (%{pct(spreadPct)})
-                    </span>
-                  ) : (
-                    <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-zinc-800 px-3 py-1 text-[13px] font-extrabold text-zinc-400">
-                      Fiyatlar aynı
-                    </span>
-                  )}
-                </div>
+                {p.label}
+                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[11.5px] font-extrabold text-zinc-400">
+                  {p.count}
+                </span>
+              </button>
+            ))}
+          </div>
 
-                {sorted.map((r) => {
-                  const isCheapest = cheapest !== null && r.id === cheapest.id;
-                  const diff =
-                    cheapest && r.price !== null
-                      ? ((r.price - (cheapest.price as number)) /
-                        (cheapest.price as number)) *
-                      100
-                      : 0;
-                  const barWidth =
-                    cheapest && r.price !== null
-                      ? Math.max(8, ((cheapest.price as number) / r.price) * 100)
-                      : 0;
-                  return (
-                    <div
-                      key={r.id}
-                      className="grid items-center gap-3.5 border-t border-zinc-800 px-[18px] py-3 transition-colors first-of-type:border-t-0 hover:bg-emerald-500/10 sm:grid-cols-[1.4fr_130px_170px_100px_60px]"
-                    >
-                      <div className="min-w-0">
-                        <b className="block font-extrabold">
-                          {showMarket ? r.source || r.name : r.name}
-                        </b>
-                        {showMarket && (
-                          <small className="text-zinc-500">{r.name}</small>
-                        )}
-                        {!showMarket && r.source && (
-                          <small className="text-zinc-500">{r.source}</small>
-                        )}
-                      </div>
+          {sections.map((section) => (
+            <div key={section.key} id={`compare-cat-${slugify(section.key)}`} className="mt-6">
+              <div className="mb-2.5 flex items-center gap-2.5 border-b border-zinc-800 pb-2.5">
+                <b className="text-base">{section.key}</b>
+                <span className="text-[12.5px] font-bold text-zinc-500">
+                  {section.items.length} ürün grubu
+                </span>
+              </div>
 
-                      <div
-                        className={
-                          "text-[17px] font-extrabold tabular-nums " +
-                          (isCheapest ? "text-green-400" : "")
-                        }
-                      >
-                        {r.price !== null ? money(r.price, r.currency) : "—"}
-                      </div>
+              {section.items.map(
+                ({ g, sorted, cheapest, spread, spreadPct, showMarket, title }, gi) => (
+                  <div
+                    key={g.key}
+                    className="ad-in mt-4 overflow-hidden rounded-[20px] border border-zinc-800 bg-zinc-900"
+                    style={{ "--i": Math.min(gi + 4, 10) } as React.CSSProperties}
+                  >
+                    <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800 px-[18px] py-4">
+                      <b className="text-base">{title}</b>
+                      <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-extrabold text-emerald-300">
+                        {g.rows.length} {showMarket ? "market" : "ürün"}
+                      </span>
+                      {cheapest && spread > 0.001 ? (
+                        <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-green-400/15 px-3 py-1 text-[13px] font-extrabold text-green-400">
+                          <AdminIcon name="coin" size={14} />
+                          {showMarket ? cheapest.source : cheapest.name} en ucuz ·{" "}
+                          {money(spread, cheapest.currency)} fark (%{pct(spreadPct)})
+                        </span>
+                      ) : (
+                        <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-zinc-800 px-3 py-1 text-[13px] font-extrabold text-zinc-400">
+                          Fiyatlar aynı
+                        </span>
+                      )}
+                    </div>
 
-                      <div>
-                        {r.price === null ? (
-                          <span className="text-[13px] text-zinc-500">
-                            Henüz kontrol edilmedi
-                          </span>
-                        ) : (
-                          <>
-                            {isCheapest ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-green-400/15 px-2.5 py-0.5 text-xs font-extrabold text-green-400">
-                                <AdminIcon name="check" size={12} stroke={3.2} />
-                                En ucuz
+                    {sorted.map((r) => {
+                      const isCheapest = cheapest !== null && r.id === cheapest.id;
+                      const diff =
+                        cheapest && r.price !== null
+                          ? ((r.price - (cheapest.price as number)) /
+                            (cheapest.price as number)) *
+                          100
+                          : 0;
+                      const barWidth =
+                        cheapest && r.price !== null
+                          ? Math.max(8, ((cheapest.price as number) / r.price) * 100)
+                          : 0;
+                      return (
+                        <div
+                          key={r.id}
+                          className="grid items-center gap-3.5 border-t border-zinc-800 px-[18px] py-3 transition-colors first-of-type:border-t-0 hover:bg-emerald-500/10 sm:grid-cols-[1.4fr_130px_170px_100px_60px]"
+                        >
+                          <div className="min-w-0">
+                            <b className="block font-extrabold">
+                              {showMarket ? r.source || r.name : r.name}
+                            </b>
+                            {showMarket && (
+                              <small className="text-zinc-500">{r.name}</small>
+                            )}
+                            {!showMarket && r.source && (
+                              <small className="text-zinc-500">{r.source}</small>
+                            )}
+                          </div>
+
+                          <div
+                            className={
+                              "text-[17px] font-extrabold tabular-nums " +
+                              (isCheapest ? "text-green-400" : "")
+                            }
+                          >
+                            {r.price !== null ? money(r.price, r.currency) : "—"}
+                          </div>
+
+                          <div>
+                            {r.price === null ? (
+                              <span className="text-[13px] text-zinc-500">
+                                Henüz kontrol edilmedi
                               </span>
                             ) : (
-                              <span className="inline-flex rounded-full bg-red-400/15 px-2.5 py-0.5 text-xs font-extrabold text-red-400">
-                                +%{pct(diff)} daha pahalı
-                              </span>
+                              <>
+                                {isCheapest ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-green-400/15 px-2.5 py-0.5 text-xs font-extrabold text-green-400">
+                                    <AdminIcon name="check" size={12} stroke={3.2} />
+                                    En ucuz
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex rounded-full bg-red-400/15 px-2.5 py-0.5 text-xs font-extrabold text-red-400">
+                                    +%{pct(diff)} daha pahalı
+                                  </span>
+                                )}
+                                <div className="mt-1.5 h-[7px] overflow-hidden rounded-full bg-zinc-800">
+                                  <div
+                                    className={
+                                      "ad-grow h-full rounded-full " +
+                                      (isCheapest
+                                        ? "bg-[linear-gradient(90deg,#22c55e,#4ade80)]"
+                                        : "bg-[linear-gradient(90deg,#2dd4bf,#5eead4)]")
+                                    }
+                                    style={{ width: `${barWidth}%` }}
+                                  />
+                                </div>
+                              </>
                             )}
-                            <div className="mt-1.5 h-[7px] overflow-hidden rounded-full bg-zinc-800">
-                              <div
-                                className={
-                                  "ad-grow h-full rounded-full " +
-                                  (isCheapest
-                                    ? "bg-[linear-gradient(90deg,#22c55e,#4ade80)]"
-                                    : "bg-[linear-gradient(90deg,#2dd4bf,#5eead4)]")
-                                }
-                                style={{ width: `${barWidth}%` }}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          </div>
 
-                      <div className="text-[13px] text-zinc-500">
-                        {r.lastChecked}
-                      </div>
+                          <div className="text-[13px] text-zinc-500">
+                            {r.lastChecked}
+                          </div>
 
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-extrabold text-emerald-500 transition-all hover:gap-2 hover:text-emerald-400 sm:justify-end"
-                      >
-                        Aç <AdminIcon name="external" size={13} />
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            ),
-          )}
+                          <a
+                            href={r.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 font-extrabold text-emerald-500 transition-all hover:gap-2 hover:text-emerald-400 sm:justify-end"
+                          >
+                            Aç <AdminIcon name="external" size={13} />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ),
+              )}
+            </div>
+          ))}
         </>
       )}
 
