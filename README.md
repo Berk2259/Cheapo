@@ -492,18 +492,25 @@ sayfası). Şu an iki yöntem gerçekten çalışır durumdadır; dropdown'da ba
 seçenek yoktur (ileride resmi API sunan bir kaynak eklenirse yeni bir yöntem
 olarak eklenir):
 
-- **JSON-LD (sayfa verisi)**: düz HTTP isteği ile sayfadaki JSON-LD fiyat verisi okunur. Hızlıdır.
+- **JSON-LD (sayfa verisi)**: düz HTTP isteği ile sayfadaki JSON-LD fiyat verisi
+  okunur. Hızlıdır, ama bazı siteler JSON-LD'de güncel olmayan ya da yanlış
+  satış kanalına ait bir fiyat verebilir (bkz. aşağıdaki not).
 - **Tarayıcı (Playwright)**: headless Chromium ile sayfa açılır (`bot/adapters/browser.py`).
   Cloudflare gibi bot korumasını geçmek için varsayılan "HeadlessChrome" kimliği
   yerine normal bir Chrome kimliği kullanılır. Sayfa açıldıktan sonra fiyat,
-  sırayla dört ayrı ayrıştırıcıyla aranır, ilk bulan kazanır:
-  1. **JSON-LD** (`adapters/json_ld.py`) — sayfanın kendi JSON-LD fiyat verisi.
-  2. **`__NEXT_DATA__`** (`adapters/next_data.py`) — Next.js sitelerinin
-     sayfaya gömdüğü JSON içindeki fiyat.
-  3. **`data-testid`** (`adapters/data_testid.py`) — sayfanın düz HTML'inde
+  sırayla dört ayrı ayrıştırıcıyla aranır, ilk bulan kazanır — sırası **bilerek**
+  "sayfada gerçekten görünen fiyat" önce, "sayfanın beyan ettiği yapısal veri"
+  en son olacak şekildedir:
+  1. **CSS class'ı `normalPrice`/`discountedPrice`** (`adapters/price_class.py`)
+     — class adı "...normalPrice" ya da "...discountedPrice" ile biten fiyat
+     kutusu (indirimli ürünlerde `discountedPrice` tercih edilir).
+  2. **`data-testid`** (`adapters/data_testid.py`) — sayfanın düz HTML'inde
      `data-testid="discountedPrice"` etiketli fiyat kutusu.
-  4. **CSS class'ı `normalPrice`** (`adapters/price_class.py`) — class adı
-     "...normalPrice" ile biten fiyat kutusu.
+  3. **`__NEXT_DATA__`** (`adapters/next_data.py`) — Next.js sitelerinin
+     sayfaya gömdüğü JSON içindeki fiyat.
+  4. **JSON-LD** (`adapters/json_ld.py`) — sayfanın kendi `Product` nesnesinin
+     `offers` alanı (sayfadaki rastgele bir `Offer` değil, özellikle bu ürüne ait
+     olan).
 
   Her sayfa birkaç saniye sürer. Kontrolcü tarayıcıyı yalnızca bu yöntemdeki
   ürünler için başlatır. Hangi alt yöntemin tuttuğu ürünün `last_status`
@@ -513,6 +520,14 @@ olarak eklenir):
   renkli bir rozet olarak (o kaynağın ürünlerinden en az biri hangi alt
   yöntemle okunduysa). Aynı kaynağın farklı ürünleri, sayfa şablonları
   farklıysa, birden fazla alt yöntemle okunabilir — bu bir hata değildir.
+
+  **Neden JSON-LD en sona alındı:** Bazı sitelerde JSON-LD'nin `offers.price`
+  alanının sayfada gerçekten görünen fiyattan farklı (başka bir satış kanalına
+  ait olabilecek) bir değer verdiği görüldü. JSON-LD hatasız, geçerli bir
+  fiyatla "başarılı" döndüğü için hata fırlatmıyor ve döngü orada duruyordu —
+  yani sıralamada önce olsaydı, DOM'daki doğru fiyata hiç sıra gelmezdi. Bu
+  yüzden önce sayfada fiilen görüneni (CSS kutusu / `data-testid`) deniyoruz,
+  JSON-LD sadece hiçbiri bulunamazsa son çare olarak kullanılıyor.
 
 Yeni bir kaynak eklerken önce düz HTTP ile (JSON-LD) denenmelidir; site 403
 veriyorsa kaynağın yöntemi "Tarayıcı (Playwright)" yapılır — bu durumda dört
@@ -627,3 +642,4 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Güvenlik: admin panele girişi "müşteri kaydı yoksa admindir" varsayımı yerine `ADMIN_EMAIL` ortam değişkeniyle açıkça belirleme; eşleşmeyen/yetim hesaplar otomatik oturumdan atılıyor
 - [x] Panel: Premium talepleri sayfası (`customer_premium_requests` tablosu), portaldaki Planım sayfasından telefon/not ile talep gönderme, onayla/reddet (geçmiş korunur)
 - [x] Panel: Yeni kayıtlar sayfası (self-servis kayıt olan müşteriler, arama, aktif/pasif, silme)
+- [x] Bot: fiyat ayrıştırıcı sırası değişti (önce DOM'daki görünen fiyat, JSON-LD en sona alındı) ve `price_class`/`json_ld` ayrıştırıcıları yanlış fiyat çekme sorununu düzeltecek şekilde güçlendirildi

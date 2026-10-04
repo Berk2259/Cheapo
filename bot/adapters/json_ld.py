@@ -25,20 +25,41 @@ class PriceResult:
     method: str | None = None
 
 
-def _find_offer(node):
-    """JSON içinde fiyatı olan ilk 'Offer' nesnesini bulur."""
+def _find_product_offers(node):
+    """JSON içinde '@type': 'Product' olan ilk nesnenin kendi 'offers' alanını bulur.
+
+    Sayfadaki herhangi bir Offer'ı değil, ürünün KENDİ offers'ını almak için;
+    yoksa "benzer ürünler" gibi alakasız bölümlerdeki fiyatlar yanlışlıkla seçilebilir.
+    """
     if isinstance(node, dict):
-        if node.get("@type") == "Offer" and "price" in node:
-            return node
+        type_ = node.get("@type")
+        types = type_ if isinstance(type_, list) else [type_]
+        if "Product" in types and "offers" in node:
+            return node["offers"]
         for value in node.values():
-            found = _find_offer(value)
+            found = _find_product_offers(value)
             if found:
                 return found
     elif isinstance(node, list):
         for item in node:
-            found = _find_offer(item)
+            found = _find_product_offers(item)
             if found:
                 return found
+    return None
+
+
+def _pick_offer(offers):
+    """offers tek bir Offer, bir liste ya da AggregateOffer olabilir; satılan fiyatı taşıyanı seçer."""
+    candidates = offers if isinstance(offers, list) else [offers]
+    for offer in candidates:
+        if not isinstance(offer, dict):
+            continue
+        if "price" in offer:
+            return offer
+        if "lowPrice" in offer:
+            offer = dict(offer)
+            offer["price"] = offer["lowPrice"]
+            return offer
     return None
 
 
@@ -50,7 +71,10 @@ def parse_price(html: str) -> PriceResult:
         except json.JSONDecodeError:
             continue
 
-        offer = _find_offer(data)
+        offers = _find_product_offers(data)
+        if not offers:
+            continue
+        offer = _pick_offer(offers)
         if offer:
             availability = str(offer.get("availability", ""))
             return PriceResult(

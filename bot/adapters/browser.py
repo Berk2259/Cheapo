@@ -33,17 +33,13 @@ def fetch_price(url: str) -> PriceResult:
         finally:
             browser.close()
 
-    # Sırayla dener: JSON-LD -> Next.js __NEXT_DATA__ -> data-testid fiyat
-    # kutusu -> class adı "normalPrice" ile biten fiyat kutusu (örn. A101).
+    # Sırayla dener: class adı "...Price" ile biten fiyat kutusu ->
+    # data-testid fiyat kutusu -> Next.js __NEXT_DATA__ -> JSON-LD. Önce
+    # sayfada GERÇEKTEN görünen fiyat denenir; JSON-LD bazı sitelerde (örn.
+    # A101) yanlış/başka kanal fiyatı içerebildiği için en sona alındı.
     try:
-        result = parse_json_ld(html)
-        result.method = "json_ld"
-        return result
-    except ValueError:
-        pass
-    try:
-        result = parse_next_data(html)
-        result.method = "next_data"
+        result = parse_price_class(html)
+        result.method = "price_class"
         return result
     except ValueError:
         pass
@@ -53,6 +49,12 @@ def fetch_price(url: str) -> PriceResult:
         return result
     except ValueError:
         pass
-    result = parse_price_class(html)
-    result.method = "price_class"
+    try:
+        result = parse_next_data(html)
+        result.method = "next_data"
+        return result
+    except ValueError:
+        pass
+    result = parse_json_ld(html)
+    result.method = "json_ld"
     return result
