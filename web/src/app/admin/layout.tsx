@@ -25,7 +25,7 @@ export default async function AdminLayout({
     "customer_requests",
   ] as const;
 
-  const [leads, customerRequests, ...trashCounts] = await Promise.all([
+  const [leads, customerRequests, removalRequests, ...trashCounts] = await Promise.all([
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
@@ -34,6 +34,11 @@ export default async function AdminLayout({
       .from("customer_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "bekliyor"),
+    supabase
+      .from("customers")
+      .select("*", { count: "exact", head: true })
+      .not("removal_requested_at", "is", null)
+      .is("deleted_at", null),
     ...trashTables.map((table) =>
       supabase
         .from(table)
@@ -47,6 +52,7 @@ export default async function AdminLayout({
   const badges = {
     "/admin/leads": leads.count ?? 0,
     "/admin/customer-requests": customerRequests.count ?? 0,
+    "/admin/removal-requests": removalRequests.count ?? 0,
     "/admin/trash": trashTotal,
   };
 

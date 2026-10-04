@@ -121,6 +121,7 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { href: "/admin/leads", label: "Talepler", icon: "inbox" },
       { href: "/admin/customer-requests", label: "Müşteri talepleri", icon: "mail" },
+      { href: "/admin/removal-requests", label: "Hesap kaldırma talepleri", icon: "trash" },
     ],
   },
   {

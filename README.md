@@ -159,8 +159,9 @@ koyu temalıdır, masaüstünde yan menü, telefonda alt sekmelerle çalışır
 - **Planım**: Ücretsiz ve Premium planın karşılaştırması.
 - **Hesap ayarları**: profil adı, şifre değiştirme (Supabase Auth üzerinden,
   mevcut şifre doğrulanır), Telegram bağlantısını kesme, ve "hesabı kaldır"
-  talebi gönderme (`customers.removal_requested_at`; admin talebi görüp
-  onaylarsa hesabı normal "sil" butonuyla çöp kutusuna atar).
+  talebi gönderme (`customers.removal_requested_at`; admin panelde **Hesap
+  kaldırma talepleri** sayfasından görür, onaylarsa hesap normal "sil"
+  akışıyla çöp kutusuna atılır, reddederse talep temizlenir).
 - **Yardım & SSS**: üstte üç hızlı rehber kartı (ilk ürünü takibe alma,
   Telegram bağlama, ilk sepeti oluşturma; karta tıklayınca adımlar açılır),
   altında kısa sorular (akordiyon). İçerik `components/portal-help.tsx`
@@ -277,8 +278,9 @@ giriş sayfası ve portal etkilenmez. Renkler yine `globals.css`'te, `.force-dar
 içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
 
 - **Yan menü** (`sidebar.tsx`): Gelenler, Katalog, Takip gruplarına ayrılmıştır.
-  Talepler ve Müşteri talepleri yanında durumu "bekliyor" olan kayıtların sayısı
-  kırmızı rozet olarak görünür (sayılar `admin/layout.tsx`'te hesaplanır).
+  Talepler, Müşteri talepleri ve Hesap kaldırma talepleri yanında bekleyen
+  kayıtların sayısı kırmızı rozet olarak görünür (sayılar `admin/layout.tsx`'te
+  hesaplanır).
 - **Üst çubuk ve arama** (`admin-topbar.tsx`, `admin-nav.ts`): sayfa başlığı ve
   Ctrl+K ile açılan sayfa arama penceresi.
 - **Ana sayfa**: "Dikkat gerektirenler" (okunamayan ürünler, bekleyen talepler,
@@ -291,6 +293,11 @@ içinde gri ve yeşil paletin yeniden tanımlanmasıyla (koyu turkuaz) verilir.
 - **Talepler ve Müşteri talepleri**: gelen kutusu düzeni; durum filtreleri,
   arama ve renkli durum seçicisi. Talepler sayfasında "Hesap aç" kartın içinde
   açılır.
+- **Hesap kaldırma talepleri**: müşterilerin "Hesap ayarları"ndan gönderdiği
+  kaldırma taleplerinin listesi, üstte arama çubuğu. Satıra tıklayınca genişler
+  ve hesabın etkisini gösterir (takip edilen ürün sayısı, Telegram durumu,
+  üyelik tarihi, aldığı bildirim sayısı); "Talebi reddet" (talebi temizler) ve
+  "Hesabı kalıcı olarak sil" (normal çöp kutusu akışına atar) butonları vardır.
 - **Bildirimler**: günlere göre gruplanmış akış, mesajlar Telegram balonu
   şeklinde, müşteri seçici ve arama.
 - **Fiyat geçmişi**: her kaydın bir önceki kayda göre değişimi, ürün seçilince
@@ -434,8 +441,9 @@ Ek olarak:
 - `basket_matches`: müşterinin elle "eşdeğer" olarak birleştirdiği ürün
   grupları (`customer_id`, `name`).
 - `customers.removal_requested_at`: müşteri "Hesap ayarları"ndan hesap
-  kaldırma talebi gönderdiğinde dolar; admin talebi görüp uygun bulursa
-  hesabı normal silme akışıyla çöp kutusuna atar.
+  kaldırma talebi gönderdiğinde dolar; admin panelde **Hesap kaldırma
+  talepleri** sayfasından görülür, onaylanırsa hesap normal silme akışıyla
+  çöp kutusuna atılır, reddedilirse bu alan temizlenir.
 - `price_daily` (görünüm): `price_history`'nin günlük son fiyat özeti (Türkiye
   saatine göre). `security_invoker` ile çalışır, yani sorgulayan kullanıcının
   RLS izinleri geçerlidir.
@@ -574,3 +582,4 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Müşteri portalı: hesap ayarlarında Telegram bağlantısını kesme/profil güncelleme için `customers` tablosuna sınırlı (sütun bazlı) kendi-satırını-güncelleme RLS izni eklendi
 - [x] Müşteri portalı: Talep gönder formunda her ürün için hedef fiyat / her değişimde bildir seçimi, onaylanınca otomatik takibe aktarılıyor
 - [x] Müşteri portalı ve admin panel: ürün listelerinde (Talep gönder, Takipler) hangi marketten olduğunu gösteren etiket eklendi
+- [x] Ürün kıyası sayfası: karşılaştırma grupları kategoriye göre başlıklı bölümlere ayrıldı, üstte kategoriye hızlı kaydırma butonları eklendi
