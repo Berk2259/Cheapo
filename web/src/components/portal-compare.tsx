@@ -88,6 +88,17 @@ export function PortalCompare({
     key,
     items: analysed.filter((a) => (a.g.category || CATEGORY_FALLBACK) === key),
   }));
+
+  const GROUPS_PER_PAGE = 5;
+  const [pages, setPages] = useState<Record<string, number>>({});
+
+  function pageFor(key: string) {
+    return pages[key] ?? 1;
+  }
+  function setPageFor(key: string, value: number) {
+    setPages((prev) => ({ ...prev, [key]: value }));
+  }
+
   const currency = groups[0]?.rows[0]?.currency ?? "TRY";
 
   const biggest = analysed.reduce(
@@ -196,7 +207,14 @@ export function PortalCompare({
             ))}
           </div>
 
-          {sections.map((section) => (
+          {sections.map((section) => {
+            const totalPages = Math.max(1, Math.ceil(section.items.length / GROUPS_PER_PAGE));
+            const page = Math.min(pageFor(section.key), totalPages);
+            const pageItems = section.items.slice(
+              (page - 1) * GROUPS_PER_PAGE,
+              page * GROUPS_PER_PAGE,
+            );
+            return (
             <div key={section.key} id={`compare-cat-${slugify(section.key)}`} className="mt-6">
               <div className="mb-2.5 flex items-center gap-2.5 border-b border-zinc-800 pb-2.5">
                 <b className="text-base">{section.key}</b>
@@ -205,7 +223,7 @@ export function PortalCompare({
                 </span>
               </div>
 
-              {section.items.map(
+              {pageItems.map(
                 ({ g, sorted, cheapest, spread, spreadPct, showMarket, title }, gi) => (
                   <div
                     key={g.key}
@@ -318,8 +336,40 @@ export function PortalCompare({
                   </div>
                 ),
               )}
+
+              {totalPages > 1 && (
+                <div className="mt-3 flex items-center justify-between border-t border-zinc-800 pt-3 text-[12.5px] text-zinc-500">
+                  <span>
+                    {(page - 1) * GROUPS_PER_PAGE + 1}–
+                    {Math.min(page * GROUPS_PER_PAGE, section.items.length)} /{" "}
+                    {section.items.length} ürün grubu
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPageFor(section.key, Math.max(1, page - 1))}
+                      disabled={page <= 1}
+                      className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                    >
+                      ‹
+                    </button>
+                    <span className="px-1 font-bold text-zinc-300">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPageFor(section.key, Math.min(totalPages, page + 1))}
+                      disabled={page >= totalPages}
+                      className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                    >
+                      ›
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </>
       )}
 

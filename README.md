@@ -181,7 +181,9 @@ takip ettiğinde, o ürünün grubundaki tüm satıcılar kıyas sayfasında gö
 Karşılaştırma grupları, içindeki ürünlerin kategorisine göre (Market,
 Elektronik, Giyim vb.) ayrı başlıklar altında gruplanır; üstte her
 kategoriye hızlıca kaydıran butonlar vardır (birden fazla kategori olduğunda
-anlamlı, tek kategoride de başlık yine görünür).
+anlamlı, tek kategoride de başlık yine görünür). Her kategori bölümü kendi
+içinde bağımsız sayfalanır (5 ürün grubu/sayfa), çok sayıda karşılaştırma
+grubu birikse de sayfa uzayıp gitmez.
 "Destek al" ve "Premium için yaz" düğmeleri (hem portal ana sayfasındaki plan
 kartında hem Planım sayfasında) Gmail'in web compose linkine
 (`https://mail.google.com/mail/?view=cm&fs=1&to=norelsoft@gmail.com`) yeni
@@ -583,3 +585,5 @@ edebilir. İleride ele alınacak bir sonraki adım.
 - [x] Müşteri portalı: Talep gönder formunda her ürün için hedef fiyat / her değişimde bildir seçimi, onaylanınca otomatik takibe aktarılıyor
 - [x] Müşteri portalı ve admin panel: ürün listelerinde (Talep gönder, Takipler) hangi marketten olduğunu gösteren etiket eklendi
 - [x] Ürün kıyası sayfası: karşılaştırma grupları kategoriye göre başlıklı bölümlere ayrıldı, üstte kategoriye hızlı kaydırma butonları eklendi
+- [x] Panel: Hesap kaldırma talepleri sayfası (arama, genişleyen kartlarda hesap etkisi, talebi reddetme/hesabı silme), sol menüde bekleyen sayısı rozeti
+- [x] Ürün kıyası sayfası: kategori bölümleri artık kendi içinde sayfalanıyor (5 ürün grubu/sayfa)
